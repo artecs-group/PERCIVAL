@@ -1,0 +1,46 @@
+# Copyright 2020 ETH Zurich and University of Bologna.
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+
+name: fpga
+on: [push]
+
+
+jobs:
+  ########################
+  # Synthesis FPGA Image #
+  ########################
+  genesys2:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/openhwgroup/vivado:latest
+      credentials:
+        username: zarubaf
+        password: ${{ secrets.GHCR_PAT }}
+      options: -h vivado --mac-address 02:42:ac:11:00:02
+    name: Genesys2 FPGA Build
+    steps:
+    # Check for `write` permission
+    - name: Check user permission
+      id: check
+      uses: scherermichael-oss/action-has-permission@master
+      with:
+        required-permission: write
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Check-out repository
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    # Build the Genesys2 bistreams
+    - name: Build Genesys2
+      if: steps.check.outputs.has-permission
+      run: |
+        apt-get update && apt-get install make
+        make fpga RISCV=/home/riscv
+    # Upload artifact on success
+    - uses: actions/upload-artifact@v2
+      if: steps.check.outputs.has-permission
+      with:
+        name: genesys2-bitstream
+        path: fpga/work-fpga/ariane_xilinx.bit
