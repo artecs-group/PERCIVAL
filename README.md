@@ -4,7 +4,7 @@ PERCIVAL is an application-level posit capable RISC-V core based on CVA6 that ca
 
 ## Publication
 
-If you use CVA6 in your academic work you can cite us:
+If you use PERCIVAL in your academic work you can cite us:
 
 ```
 @misc{mallasén2021percival,
