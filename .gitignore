@@ -24,6 +24,8 @@ build/
 *.out
 *.jou
 *.o
+*.elf
+*.dump
 uart
 work-ver/*
 fpga/work-fpga

@@ -335,15 +335,16 @@ module load_unit import ariane_pkg::*; #(
     // result mux fast
     logic [7:0]  sign_bits;
     logic [2:0]  idx_d, idx_q;
-    logic        sign_bit, signed_d, signed_q, fp_sign_d, fp_sign_q;
+    logic        sign_bit, signed_d, signed_q, fp_sign_d, fp_sign_q, pos_sign_d, pos_sign_q;
 
 
     // prepare these signals for faster selection in the next cycle
-    assign signed_d  = load_data_d.operator  inside {ariane_pkg::LW,  ariane_pkg::LH,  ariane_pkg::LB};
-    assign fp_sign_d = load_data_d.operator  inside {ariane_pkg::FLW, ariane_pkg::FLH, ariane_pkg::FLB};
-    assign idx_d     = (load_data_d.operator inside {ariane_pkg::LW,  ariane_pkg::FLW}) ? load_data_d.address_offset + 3 :
-                       (load_data_d.operator inside {ariane_pkg::LH,  ariane_pkg::FLH}) ? load_data_d.address_offset + 1 :
-                                                                                          load_data_d.address_offset;
+    assign signed_d   = load_data_d.operator  inside {ariane_pkg::LW,  ariane_pkg::LH,  ariane_pkg::LB};
+    assign fp_sign_d  = load_data_d.operator  inside {ariane_pkg::FLW, ariane_pkg::FLH, ariane_pkg::FLB};
+    assign pos_sign_d = load_data_d.operator  inside {ariane_pkg::PLW};
+    assign idx_d     = (load_data_d.operator inside {ariane_pkg::LW,  ariane_pkg::FLW, ariane_pkg::PLW}) ? load_data_d.address_offset + 3 :
+                       (load_data_d.operator inside {ariane_pkg::LH,  ariane_pkg::FLH})                  ? load_data_d.address_offset + 1 :
+                                                                                                           load_data_d.address_offset;
 
 
     assign sign_bits = { req_port_i.data_rdata[63],
@@ -357,12 +358,12 @@ module load_unit import ariane_pkg::*; #(
 
     // select correct sign bit in parallel to result shifter above
     // pull to 0 if unsigned
-    assign sign_bit       = signed_q & sign_bits[idx_q] | fp_sign_q;
+    assign sign_bit       = signed_q & sign_bits[idx_q] | fp_sign_q | pos_sign_q;
 
     // result mux
     always_comb begin
         unique case (load_data_q.operator)
-            ariane_pkg::LW, ariane_pkg::LWU, ariane_pkg::FLW:    result_o = {{riscv::XLEN-32{sign_bit}}, shifted_data[31:0]};
+            ariane_pkg::LW, ariane_pkg::LWU, ariane_pkg::FLW, ariane_pkg::PLW:    result_o = {{riscv::XLEN-32{sign_bit}}, shifted_data[31:0]};
             ariane_pkg::LH, ariane_pkg::LHU, ariane_pkg::FLH:    result_o = {{riscv::XLEN-32+16{sign_bit}}, shifted_data[15:0]};
             ariane_pkg::LB, ariane_pkg::LBU, ariane_pkg::FLB:    result_o = {{riscv::XLEN-32+24{sign_bit}}, shifted_data[7:0]};
             default:    result_o = shifted_data[riscv::XLEN-1:0];
@@ -374,10 +375,12 @@ module load_unit import ariane_pkg::*; #(
             idx_q     <= 0;
             signed_q  <= 0;
             fp_sign_q <= 0;
+            pos_sign_q <= 0;
         end else begin
             idx_q     <= idx_d;
             signed_q  <= signed_d;
             fp_sign_q <= fp_sign_d;
+            pos_sign_q <= pos_sign_d;
         end
     end
     // end result mux fast

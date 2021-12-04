@@ -319,7 +319,7 @@ module load_store_unit import ariane_pkg::*; #(
                     end
                 end
                 // word
-                LW, LWU, SW, FLW, FSW,
+                LW, LWU, SW, FLW, FSW, PLW, PSW,
                 AMO_LRW, AMO_SCW,
                 AMO_SWAPW, AMO_ADDW, AMO_ANDW, AMO_ORW,
                 AMO_XORW, AMO_MAXW, AMO_MAXWU, AMO_MINW,

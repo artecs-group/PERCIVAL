@@ -510,6 +510,108 @@ module decoder import ariane_pkg::*; (
                 end
 
                 // --------------------------
+                // PAU Operations
+                // --------------------------
+                riscv::OpcodeCustom0: begin
+                    if (POS_PRESENT) begin
+                        unique case (instr.rtype.funct3)
+                            3'b000: begin // Posit R instructions
+                                instruction_o.fu = PAU;
+                                instruction_o.rs1[4:0] = instr.rtype.rs1;
+                                instruction_o.rs2[4:0] = instr.rtype.rs2;
+                                instruction_o.rd[4:0]  = instr.rtype.rd;
+
+                                // Check fmt (bits 26:25)
+                                if (instr.rtype.funct7[26:25] != 2'b10) // Only single-precision supported currently
+                                    illegal_instr = 1'b1;
+
+                                unique case (instr.rtype.funct7[31:27])
+                                    5'b0_0000: instruction_o.op = ariane_pkg::PADD;
+                                    5'b0_0001: instruction_o.op = ariane_pkg::PSUB;
+                                    5'b0_0010: instruction_o.op = ariane_pkg::PMUL;
+                                    5'b0_0011: instruction_o.op = ariane_pkg::PDIV;
+                                    5'b0_0110: instruction_o.op = ariane_pkg::PSQRT;
+                                    5'b0_0100: begin
+                                        instruction_o.op = ariane_pkg::PMIN;
+                                        instruction_o.fu = ALU;
+                                    end
+                                    5'b0_0101: begin
+                                        instruction_o.op = ariane_pkg::PMAX;
+                                        instruction_o.fu = ALU;
+                                    end
+
+                                    5'b0_0111: instruction_o.op = ariane_pkg::QMADD;
+                                    5'b0_1000: instruction_o.op = ariane_pkg::QMSUB;
+                                    5'b0_1001: instruction_o.op = ariane_pkg::QCLR;
+                                    5'b0_1010: instruction_o.op = ariane_pkg::QNEG;
+                                    5'b0_1011: instruction_o.op = ariane_pkg::QROUND;
+
+                                    5'b0_1100: instruction_o.op = ariane_pkg::PCVT_P2I;  // pcvt.w.s
+                                    5'b0_1101: instruction_o.op = ariane_pkg::PCVT_P2U;  // pcvt.wu.s
+                                    5'b0_1110: instruction_o.op = ariane_pkg::PCVT_P2L;  // pcvt.l.s
+                                    5'b0_1111: instruction_o.op = ariane_pkg::PCVT_P2LU; // pcvt.lu.s
+                                    5'b1_0000: instruction_o.op = ariane_pkg::PCVT_I2P;  // pcvt.s.w
+                                    5'b1_0001: instruction_o.op = ariane_pkg::PCVT_U2P;  // pcvt.s.wu
+                                    5'b1_0010: instruction_o.op = ariane_pkg::PCVT_L2P;  // pcvt.s.l
+                                    5'b1_0011: instruction_o.op = ariane_pkg::PCVT_LU2P; // pcvt.s.lu
+
+                                    5'b1_0100: instruction_o.op = ariane_pkg::PSGNJ;
+                                    5'b1_0101: instruction_o.op = ariane_pkg::PSGNJN;
+                                    5'b1_0110: instruction_o.op = ariane_pkg::PSGNJX;
+
+                                    5'b1_0111: instruction_o.op = ariane_pkg::PMV_P2X;  //pmv.x.w
+                                    5'b1_1000: instruction_o.op = ariane_pkg::PMV_X2P;  //pmv.w.x
+
+                                    5'b1_1001: begin
+                                        instruction_o.op = ariane_pkg::PEQ;
+                                        instruction_o.fu = ALU;
+                                    end
+                                    5'b1_1010: begin
+                                        instruction_o.op = ariane_pkg::PLT;
+                                        instruction_o.fu = ALU;
+                                    end
+                                    5'b1_1011: begin
+                                        instruction_o.op = ariane_pkg::PLE;
+                                        instruction_o.fu = ALU;
+                                    end
+                                    default: illegal_instr = 1'b1;
+                                endcase
+                            end
+                            3'b001: begin // PLW
+                                instruction_o.fu  = LOAD;
+                                imm_select = IIMM;
+                                instruction_o.rs1[4:0] = instr.itype.rs1;
+                                instruction_o.rd[4:0] = instr.itype.rd;
+                                instruction_o.op = ariane_pkg::PLW;
+                            end
+                            3'b010: begin // QL - TODO
+                                instruction_o.fu  = LOAD;
+                                imm_select = IIMM;
+                                instruction_o.rs1[4:0] = instr.itype.rs1;
+                                instruction_o.rd[4:0] = instr.itype.rd;
+                                instruction_o.op = ariane_pkg::QL;
+                            end
+                            3'b011: begin // PSW
+                                instruction_o.fu  = STORE;
+                                imm_select = SIMM;
+                                instruction_o.rs1[4:0] = instr.stype.rs1;
+                                instruction_o.rs2[4:0] = instr.stype.rs2;
+                                instruction_o.op = ariane_pkg::PSW;
+                            end
+                            3'b100: begin // QS - TODO
+                                instruction_o.fu  = STORE;
+                                imm_select = SIMM;
+                                instruction_o.rs1[4:0] = instr.stype.rs1;
+                                instruction_o.rs2[4:0] = instr.stype.rs2;
+                                instruction_o.op = ariane_pkg::QS;
+                            end
+                            default: illegal_instr = 1'b1;
+                        endcase
+                    end else
+                        illegal_instr = 1'b1;
+                end
+
+                // --------------------------
                 // 32bit Reg-Reg Operations
                 // --------------------------
                 riscv::OpcodeOp32: begin

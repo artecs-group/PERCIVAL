@@ -26,6 +26,7 @@ module scoreboard #(
   // list of clobbered registers to issue stage
   output ariane_pkg::fu_t [2**ariane_pkg::REG_ADDR_SIZE-1:0]    rd_clobber_gpr_o,
   output ariane_pkg::fu_t [2**ariane_pkg::REG_ADDR_SIZE-1:0]    rd_clobber_fpr_o,
+  output ariane_pkg::fu_t [2**ariane_pkg::REG_ADDR_SIZE-1:0]    rd_clobber_posr_o,
 
   // regfile like interface to operand read stage
   input  logic [ariane_pkg::REG_ADDR_SIZE-1:0]                  rs1_i,
@@ -68,6 +69,7 @@ module scoreboard #(
   typedef struct packed {
     logic                          issued;         // this bit indicates whether we issued this instruction e.g.: if it is valid
     logic                          is_rd_fpr_flag; // redundant meta info, added for speed
+    logic                          is_rd_posr_flag; // redundant meta info, added for speed
     ariane_pkg::scoreboard_entry_t sbe;            // this is the score board entry we will send to ex
   } sb_mem_t;
   sb_mem_t [NR_ENTRIES-1:0] mem_q, mem_n;
@@ -117,6 +119,7 @@ module scoreboard #(
       issue_en = 1'b1;
       mem_n[issue_pointer_q] = {1'b1,                                      // valid bit
                                 ariane_pkg::is_rd_fpr(decoded_instr_i.op), // whether rd goes to the fpr
+                                ariane_pkg::is_rd_posr(decoded_instr_i.op),// whether rd goes to the posr
                                 decoded_instr_i                            // decoded instruction record
                                 };
     end
@@ -198,24 +201,28 @@ module scoreboard #(
   // rd_clobber output: output currently clobbered destination registers
   logic [2**ariane_pkg::REG_ADDR_SIZE-1:0][NR_ENTRIES:0]              gpr_clobber_vld;
   logic [2**ariane_pkg::REG_ADDR_SIZE-1:0][NR_ENTRIES:0]              fpr_clobber_vld;
+  logic [2**ariane_pkg::REG_ADDR_SIZE-1:0][NR_ENTRIES:0]              posr_clobber_vld;
   ariane_pkg::fu_t [NR_ENTRIES:0]                                     clobber_fu;
 
   always_comb begin : clobber_assign
     gpr_clobber_vld  = '0;
     fpr_clobber_vld  = '0;
+    posr_clobber_vld  = '0;
 
     // default (highest entry hast lowest prio in arbiter tree below)
     clobber_fu[NR_ENTRIES] = ariane_pkg::NONE;
     for (int unsigned i = 0; i < 2**ariane_pkg::REG_ADDR_SIZE; i++) begin
       gpr_clobber_vld[i][NR_ENTRIES] = 1'b1;
       fpr_clobber_vld[i][NR_ENTRIES] = 1'b1;
+      posr_clobber_vld[i][NR_ENTRIES] = 1'b1;
     end
 
     // check for all valid entries and set the clobber accordingly
     for (int unsigned i = 0; i < NR_ENTRIES; i++) begin
-      gpr_clobber_vld[mem_q[i].sbe.rd][i] = mem_q[i].issued & ~mem_q[i].is_rd_fpr_flag;
-      fpr_clobber_vld[mem_q[i].sbe.rd][i] = mem_q[i].issued & mem_q[i].is_rd_fpr_flag;
-      clobber_fu[i]                       = mem_q[i].sbe.fu;
+      gpr_clobber_vld[mem_q[i].sbe.rd][i]  = mem_q[i].issued & ~mem_q[i].is_rd_fpr_flag & ~mem_q[i].is_rd_posr_flag;
+      fpr_clobber_vld[mem_q[i].sbe.rd][i]  = mem_q[i].issued & mem_q[i].is_rd_fpr_flag;
+      posr_clobber_vld[mem_q[i].sbe.rd][i] = mem_q[i].issued & mem_q[i].is_rd_posr_flag;
+      clobber_fu[i]                        = mem_q[i].sbe.fu;
     end
 
     // GPR[0] is always free
@@ -260,6 +267,24 @@ module scoreboard #(
       .data_o  ( rd_clobber_fpr_o[k] ),
       .idx_o   (                     )
     );
+    rr_arb_tree #(
+      .NumIn(NR_ENTRIES+1),
+      .DataType(ariane_pkg::fu_t),
+      .ExtPrio(1'b1),
+      .AxiVldRdy(1'b1)
+    ) i_sel_posr_clobbers (
+      .clk_i   ( clk_i                ),
+      .rst_ni  ( rst_ni               ),
+      .flush_i ( 1'b0                 ),
+      .rr_i    ( '0                   ),
+      .req_i   ( posr_clobber_vld[k]  ),
+      .gnt_o   (                      ),
+      .data_i  ( clobber_fu           ),
+      .gnt_i   ( 1'b1                 ),
+      .req_o   (                      ),
+      .data_o  ( rd_clobber_posr_o[k] ),
+      .idx_o   (                      )
+    );
   end
 
   // ----------------------------------
@@ -272,14 +297,14 @@ module scoreboard #(
 
   // WB ports have higher prio than entries
   for (genvar k = 0; unsigned'(k) < NR_WB_PORTS; k++) begin : gen_rs_wb
-    assign rs1_fwd_req[k] = (mem_q[trans_id_i[k]].sbe.rd == rs1_i) & wt_valid_i[k] & (~ex_i[k].valid) & (mem_q[trans_id_i[k]].is_rd_fpr_flag == ariane_pkg::is_rs1_fpr(issue_instr_o.op));
-    assign rs2_fwd_req[k] = (mem_q[trans_id_i[k]].sbe.rd == rs2_i) & wt_valid_i[k] & (~ex_i[k].valid) & (mem_q[trans_id_i[k]].is_rd_fpr_flag == ariane_pkg::is_rs2_fpr(issue_instr_o.op));
+    assign rs1_fwd_req[k] = (mem_q[trans_id_i[k]].sbe.rd == rs1_i) & wt_valid_i[k] & (~ex_i[k].valid) & (mem_q[trans_id_i[k]].is_rd_fpr_flag == ariane_pkg::is_rs1_fpr(issue_instr_o.op)) & (mem_q[trans_id_i[k]].is_rd_posr_flag == ariane_pkg::is_rs1_posr(issue_instr_o.op));
+    assign rs2_fwd_req[k] = (mem_q[trans_id_i[k]].sbe.rd == rs2_i) & wt_valid_i[k] & (~ex_i[k].valid) & (mem_q[trans_id_i[k]].is_rd_fpr_flag == ariane_pkg::is_rs2_fpr(issue_instr_o.op)) & (mem_q[trans_id_i[k]].is_rd_posr_flag == ariane_pkg::is_rs2_posr(issue_instr_o.op));
     assign rs3_fwd_req[k] = (mem_q[trans_id_i[k]].sbe.rd == rs3_i) & wt_valid_i[k] & (~ex_i[k].valid) & (mem_q[trans_id_i[k]].is_rd_fpr_flag == ariane_pkg::is_imm_fpr(issue_instr_o.op));
     assign rs_data[k]     = wbdata_i[k];
   end
   for (genvar k = 0; unsigned'(k) < NR_ENTRIES; k++) begin : gen_rs_entries
-    assign rs1_fwd_req[k+NR_WB_PORTS] = (mem_q[k].sbe.rd == rs1_i) & mem_q[k].issued & mem_q[k].sbe.valid & (mem_q[k].is_rd_fpr_flag == ariane_pkg::is_rs1_fpr(issue_instr_o.op));
-    assign rs2_fwd_req[k+NR_WB_PORTS] = (mem_q[k].sbe.rd == rs2_i) & mem_q[k].issued & mem_q[k].sbe.valid & (mem_q[k].is_rd_fpr_flag == ariane_pkg::is_rs2_fpr(issue_instr_o.op));
+    assign rs1_fwd_req[k+NR_WB_PORTS] = (mem_q[k].sbe.rd == rs1_i) & mem_q[k].issued & mem_q[k].sbe.valid & (mem_q[k].is_rd_fpr_flag == ariane_pkg::is_rs1_fpr(issue_instr_o.op)) & (mem_q[k].is_rd_posr_flag == ariane_pkg::is_rs1_posr(issue_instr_o.op));
+    assign rs2_fwd_req[k+NR_WB_PORTS] = (mem_q[k].sbe.rd == rs2_i) & mem_q[k].issued & mem_q[k].sbe.valid & (mem_q[k].is_rd_fpr_flag == ariane_pkg::is_rs2_fpr(issue_instr_o.op)) & (mem_q[k].is_rd_posr_flag == ariane_pkg::is_rs2_posr(issue_instr_o.op));
     assign rs3_fwd_req[k+NR_WB_PORTS] = (mem_q[k].sbe.rd == rs3_i) & mem_q[k].issued & mem_q[k].sbe.valid & (mem_q[k].is_rd_fpr_flag == ariane_pkg::is_imm_fpr(issue_instr_o.op));
     assign rs_data[k+NR_WB_PORTS]     = mem_q[k].sbe.result;
   end

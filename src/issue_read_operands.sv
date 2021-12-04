@@ -38,6 +38,7 @@ module issue_read_operands import ariane_pkg::*; #(
     // get clobber input
     input  fu_t [2**REG_ADDR_SIZE-1:0]             rd_clobber_gpr_i,
     input  fu_t [2**REG_ADDR_SIZE-1:0]             rd_clobber_fpr_i,
+    input  fu_t [2**REG_ADDR_SIZE-1:0]             rd_clobber_posr_i,
     // To FU, just single issue for now
     output fu_data_t                               fu_data_o,
     output logic [riscv::VLEN-1:0]                 rs1_forwarding_o,  // unregistered version of fu_data_o.operanda
@@ -60,13 +61,17 @@ module issue_read_operands import ariane_pkg::*; #(
     output logic                                   fpu_valid_o,      // Output is valid
     output logic [1:0]                             fpu_fmt_o,        // FP fmt field from instr.
     output logic [2:0]                             fpu_rm_o,         // FP rm field from instr.
+    // PAU
+    input  logic                                   pau_ready_i,      // FU is ready
+    output logic                                   pau_valid_o,      // Output is valid
     // CSR
     output logic                                   csr_valid_o,      // Output is valid
     // commit port
     input  logic [NR_COMMIT_PORTS-1:0][4:0]        waddr_i,
     input  logic [NR_COMMIT_PORTS-1:0][riscv::XLEN-1:0] wdata_i,
     input  logic [NR_COMMIT_PORTS-1:0]             we_gpr_i,
-    input  logic [NR_COMMIT_PORTS-1:0]             we_fpr_i
+    input  logic [NR_COMMIT_PORTS-1:0]             we_fpr_i,
+    input  logic [NR_COMMIT_PORTS-1:0]             we_posr_i
     // committing instruction instruction
     // from scoreboard
     // input  scoreboard_entry     commit_instr_i,
@@ -86,6 +91,7 @@ module issue_read_operands import ariane_pkg::*; #(
     logic          fpu_valid_q;
     logic [1:0]      fpu_fmt_q;
     logic [2:0]       fpu_rm_q;
+    logic          pau_valid_q;
     logic          lsu_valid_q;
     logic          csr_valid_q;
     logic       branch_valid_q;
@@ -120,6 +126,7 @@ module issue_read_operands import ariane_pkg::*; #(
     assign fpu_valid_o         = fpu_valid_q;
     assign fpu_fmt_o           = fpu_fmt_q;
     assign fpu_rm_o            = fpu_rm_q;
+    assign pau_valid_o         = pau_valid_q;
     // ---------------
     // Issue Stage
     // ---------------
@@ -134,6 +141,8 @@ module issue_read_operands import ariane_pkg::*; #(
                 fu_busy = ~flu_ready_i;
             FPU, FPU_VEC:
                 fu_busy = ~fpu_ready_i;
+            PAU:
+                fu_busy = ~pau_ready_i;
             LOAD, STORE:
                 fu_busy = ~lsu_ready_i;
             default:
@@ -159,24 +168,28 @@ module issue_read_operands import ariane_pkg::*; #(
 
         // 0. check that we are not using the zimm type in RS1
         //    as this is an immediate we do not have to wait on anything here
-        // 1. check if the source registers are clobbered --> check appropriate clobber list (gpr/fpr)
+        // 1. check if the source registers are clobbered --> check appropriate clobber list (gpr/fpr/posr)
         // 2. poll the scoreboard
-        if (!issue_instr_i.use_zimm && (is_rs1_fpr(issue_instr_i.op) ? rd_clobber_fpr_i[issue_instr_i.rs1] != NONE
-                                                                     : rd_clobber_gpr_i[issue_instr_i.rs1] != NONE)) begin
+        if (!issue_instr_i.use_zimm && (is_rs1_fpr(issue_instr_i.op)  ? rd_clobber_fpr_i[issue_instr_i.rs1]  != NONE
+                                       :is_rs1_posr(issue_instr_i.op) ? rd_clobber_posr_i[issue_instr_i.rs1] != NONE
+                                                                      : rd_clobber_gpr_i[issue_instr_i.rs1]  != NONE)) begin
             // check if the clobbering instruction is not a CSR instruction, CSR instructions can only
             // be fetched through the register file since they can't be forwarded
-            // if the operand is available, forward it. CSRs don't write to/from FPR
-            if (rs1_valid_i && (is_rs1_fpr(issue_instr_i.op) ? 1'b1 : ((rd_clobber_gpr_i[issue_instr_i.rs1] != CSR) || (issue_instr_i.op == SFENCE_VMA)))) begin
+            // if the operand is available, forward it. CSRs don't write to/from FPR or PosR
+            if (rs1_valid_i && ((is_rs1_fpr(issue_instr_i.op) || is_rs1_posr(issue_instr_i.op)) ? 1'b1
+                                    : ((rd_clobber_gpr_i[issue_instr_i.rs1] != CSR) || (issue_instr_i.op == SFENCE_VMA)))) begin
                 forward_rs1 = 1'b1;
             end else begin // the operand is not available -> stall
                 stall = 1'b1;
             end
         end
 
-        if (is_rs2_fpr(issue_instr_i.op) ? rd_clobber_fpr_i[issue_instr_i.rs2] != NONE
-                                         : rd_clobber_gpr_i[issue_instr_i.rs2] != NONE) begin
+        if (is_rs2_fpr(issue_instr_i.op)  ? rd_clobber_fpr_i[issue_instr_i.rs2]  != NONE
+           :is_rs2_posr(issue_instr_i.op) ? rd_clobber_posr_i[issue_instr_i.rs2] != NONE
+                                          : rd_clobber_gpr_i[issue_instr_i.rs2]  != NONE) begin
             // if the operand is available, forward it. CSRs don't write to/from FPR
-            if (rs2_valid_i && (is_rs2_fpr(issue_instr_i.op) ? 1'b1 : ( (rd_clobber_gpr_i[issue_instr_i.rs2] != CSR) || (issue_instr_i.op == SFENCE_VMA))))  begin
+            if (rs2_valid_i && ((is_rs2_fpr(issue_instr_i.op) || is_rs2_posr(issue_instr_i.op)) ? 1'b1 
+                                    : ((rd_clobber_gpr_i[issue_instr_i.rs2] != CSR) || (issue_instr_i.op == SFENCE_VMA))))  begin
                 forward_rs2 = 1'b1;
             end else begin // the operand is not available -> stall
                 stall = 1'b1;
@@ -195,7 +208,7 @@ module issue_read_operands import ariane_pkg::*; #(
 
     // Forwarding/Output MUX
     always_comb begin : forwarding_operand_select
-        // default is regfiles (gpr or fpr)
+        // default is regfiles (gpr, fpr or posr)
         operand_a_n = operand_a_regfile;
         operand_b_n = operand_b_regfile;
         // immediates are the third operands in the store case
@@ -244,6 +257,7 @@ module issue_read_operands import ariane_pkg::*; #(
         fpu_valid_q    <= 1'b0;
         fpu_fmt_q      <= 2'b0;
         fpu_rm_q       <= 3'b0;
+        pau_valid_q    <= 1'b0;
         csr_valid_q    <= 1'b0;
         branch_valid_q <= 1'b0;
       end else begin
@@ -253,6 +267,7 @@ module issue_read_operands import ariane_pkg::*; #(
         fpu_valid_q    <= 1'b0;
         fpu_fmt_q      <= 2'b0;
         fpu_rm_q       <= 3'b0;
+        pau_valid_q    <= 1'b0;
         csr_valid_q    <= 1'b0;
         branch_valid_q <= 1'b0;
         // Exception pass through:
@@ -276,6 +291,8 @@ module issue_read_operands import ariane_pkg::*; #(
                     fpu_fmt_q      <= orig_instr.rvftype.vfmt;         // vfmt bits from instruction
                     fpu_rm_q       <= {2'b0, orig_instr.rvftype.repl}; // repl bit from instruction
                 end
+                PAU : 
+                    pau_valid_q    <= 1'b1;
                 LOAD, STORE:
                     lsu_valid_q    <= 1'b1;
                 CSR:
@@ -290,6 +307,7 @@ module issue_read_operands import ariane_pkg::*; #(
             lsu_valid_q    <= 1'b0;
             mult_valid_q   <= 1'b0;
             fpu_valid_q    <= 1'b0;
+            pau_valid_q    <= 1'b0;
             csr_valid_q    <= 1'b0;
             branch_valid_q <= 1'b0;
         end
@@ -311,15 +329,17 @@ module issue_read_operands import ariane_pkg::*; #(
                 // WAW - Write After Write Dependency Check
                 // -----------------------------------------
                 // no other instruction has the same destination register -> issue the instruction
-                if (is_rd_fpr(issue_instr_i.op) ? (rd_clobber_fpr_i[issue_instr_i.rd] == NONE)
-                                                : (rd_clobber_gpr_i[issue_instr_i.rd] == NONE)) begin
+                if (is_rd_fpr(issue_instr_i.op)  ? (rd_clobber_fpr_i[issue_instr_i.rd]  == NONE)
+                   :is_rd_posr(issue_instr_i.op) ? (rd_clobber_posr_i[issue_instr_i.rd] == NONE)
+                                                 : (rd_clobber_gpr_i[issue_instr_i.rd]  == NONE)) begin
                     issue_ack_o = 1'b1;
                 end
                 // or check that the target destination register will be written in this cycle by the
                 // commit stage
                 for (int unsigned i = 0; i < NR_COMMIT_PORTS; i++)
-                    if (is_rd_fpr(issue_instr_i.op) ? (we_fpr_i[i] && waddr_i[i] == issue_instr_i.rd)
-                                                    : (we_gpr_i[i] && waddr_i[i] == issue_instr_i.rd)) begin
+                    if (is_rd_fpr(issue_instr_i.op)  ? (we_fpr_i[i] && waddr_i[i]  == issue_instr_i.rd)
+                       :is_rd_posr(issue_instr_i.op) ? (we_posr_i[i] && waddr_i[i] == issue_instr_i.rd)
+                                                     : (we_gpr_i[i] && waddr_i[i]  == issue_instr_i.rd)) begin
                         issue_ack_o = 1'b1;
                     end
             end
@@ -410,8 +430,47 @@ module issue_read_operands import ariane_pkg::*; #(
         end
     endgenerate
 
-    assign operand_a_regfile = is_rs1_fpr(issue_instr_i.op) ? {{riscv::XLEN-FLEN{1'b0}}, fprdata[0]} : rdata[0];
-    assign operand_b_regfile = is_rs2_fpr(issue_instr_i.op) ? {{riscv::XLEN-FLEN{1'b0}}, fprdata[1]} : rdata[1];
+    // -----------------------------
+    // Posit Register File
+    // -----------------------------
+    logic [1:0][POSLEN-1:0] posrdata;
+
+    // pack signals
+    logic [1:0][4:0] pos_raddr_pack;
+    logic [NR_COMMIT_PORTS-1:0][POSLEN-1:0] pos_wdata_pack;
+
+    generate
+        if (POS_PRESENT) begin : pos_regfile_gen
+            assign pos_raddr_pack = {issue_instr_i.rs2[4:0], issue_instr_i.rs1[4:0]};
+            for (genvar i = 0; i < NR_COMMIT_PORTS; i++) begin : gen_pos_wdata_pack
+                assign pos_wdata_pack[i] = {wdata_i[i][POSLEN-1:0]};
+            end
+
+            ariane_regfile #(
+                .DATA_WIDTH     ( POSLEN          ),
+                .NR_READ_PORTS  ( 2               ),
+                .NR_WRITE_PORTS ( NR_COMMIT_PORTS ),
+                .ZERO_REG_ZERO  ( 0               )
+            ) i_ariane_pos_regfile (
+                .test_en_i ( 1'b0           ),
+                .raddr_i   ( pos_raddr_pack ),
+                .rdata_o   ( posrdata       ),
+                .waddr_i   ( waddr_pack     ),
+                .wdata_i   ( pos_wdata_pack ),
+                .we_i      ( we_posr_i      ),
+                .*
+            );
+        end else begin : no_posr_gen
+            assign posrdata = '{default: '0};
+        end
+    endgenerate
+
+    assign operand_a_regfile = is_rs1_fpr(issue_instr_i.op)  ? {{riscv::XLEN-FLEN{1'b0}}, fprdata[0]}
+                              :is_rs1_posr(issue_instr_i.op) ? {{riscv::XLEN-POSLEN{1'b0}}, posrdata[0]} 
+                                                             : rdata[0];
+    assign operand_b_regfile = is_rs2_fpr(issue_instr_i.op)  ? {{riscv::XLEN-FLEN{1'b0}}, fprdata[1]}
+                              :is_rs2_posr(issue_instr_i.op) ? {{riscv::XLEN-POSLEN{1'b0}}, posrdata[1]} 
+                                                             : rdata[1];
     assign operand_c_regfile = fprdata[2];
 
     // ----------------------

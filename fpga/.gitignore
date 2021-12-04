@@ -1,6 +1,6 @@
 .*
 !.gitignore
-/reports
+/reports*
 scripts/add_sources.tcl
 vivado*
 *.cache

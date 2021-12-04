@@ -183,6 +183,11 @@ package ariane_pkg;
     localparam int unsigned LAT_NONCOMP      = 'd1;
     localparam int unsigned LAT_CONV         = 'd2;
 
+    // Posit unit
+    localparam bit POS_PRESENT = 1'b1;
+    localparam POSLEN = 32;
+    localparam QUIRELEN = 512;
+
     // --------------------------------------
     // vvvv Don't change these by hand! vvvv
     localparam bit FP_PRESENT = RVF | RVD | XF16 | XF16ALT | XF8;
@@ -195,7 +200,7 @@ package ariane_pkg;
                          XF8     ? 8 :  // Xf8 ext.
                          1;             // Unused in case of no FP
 
-    localparam bit NSX = XF16 | XF16ALT | XF8 | XFVEC; // Are non-standard extensions present?
+    localparam bit NSX = XF16 | XF16ALT | XF8 | XFVEC | POS_PRESENT; // Are non-standard extensions present?
 
     localparam bit RVFVEC     = RVF     & XFVEC & FLEN>32; // FP32 vectors available if vectors and larger fmt enabled
     localparam bit XF16VEC    = XF16    & XFVEC & FLEN>16; // FP16 vectors available if vectors and larger fmt enabled
@@ -220,7 +225,7 @@ package ariane_pkg;
 
     // 32 registers + 1 bit for re-naming = 6
     localparam REG_ADDR_SIZE = 6;
-    localparam NR_WB_PORTS = 4;
+    localparam NR_WB_PORTS = 5;
 
     // static debug hartinfo
     localparam dm::hartinfo_t DebugHartInfo = '{
@@ -357,7 +362,8 @@ package ariane_pkg;
         MULT,      // 5
         CSR,       // 6
         FPU,       // 7
-        FPU_VEC    // 8
+        FPU_VEC,   // 8
+        PAU        // 9
     } fu_t;
 
     localparam EXC_OFF_RST      = 8'h80;
@@ -433,7 +439,7 @@ package ariane_pkg;
     // ---------------
     // EX Stage
     // ---------------
-    typedef enum logic [6:0] { // basic ALU op
+    typedef enum logic [7:0] { // basic ALU op
                                ADD, SUB, ADDW, SUBW,
                                // logic operations
                                XORL, ORL, ANDL,
@@ -468,7 +474,19 @@ package ariane_pkg;
                                // Floating-Point Classify Instruction
                                FCLASS,
                                // Vectorial Floating-Point Instructions that don't directly map onto the scalar ones
-                               VFMIN, VFMAX, VFSGNJ, VFSGNJN, VFSGNJX, VFEQ, VFNE, VFLT, VFGE, VFLE, VFGT, VFCPKAB_S, VFCPKCD_S, VFCPKAB_D, VFCPKCD_D
+                               VFMIN, VFMAX, VFSGNJ, VFSGNJN, VFSGNJX, VFEQ, VFNE, VFLT, VFGE, VFLE, VFGT, VFCPKAB_S, VFCPKCD_S, VFCPKAB_D, VFCPKCD_D,
+                               // Posit Computational Instructions
+                               PADD, PSUB, PMUL, PDIV, PSQRT, PMIN, PMAX,
+                               // Posit Quire Instructions
+                               QMADD, QMSUB, QCLR, QNEG, QROUND,
+                               // Posit Conversion Instructions
+                               PCVT_P2I, PCVT_P2L, PCVT_P2U, PCVT_P2LU, PCVT_I2P, PCVT_L2P, PCVT_U2P, PCVT_LU2P, 
+                               // Posit Move Instructions
+                               PSGNJ, PSGNJN, PSGNJX, PMV_P2X, PMV_X2P,
+                               // Posit Compare Instructions
+                               PEQ, PLT, PLE,
+                               // Posit Load and Store Instructions
+                               PLW, QL, PSW, QS
                              } fu_op;
 
     typedef struct packed {
@@ -561,6 +579,55 @@ package ariane_pkg;
             default: return 1'b0;
         endcase
     endfunction
+
+    // -----------------------------------
+    // Extract Src/Dst Posit Reg from Op
+    // -----------------------------------
+    function automatic logic is_rs1_posr (input fu_op op);
+        if (POS_PRESENT) begin // makes function static for non-pos case
+            unique case (op) inside
+                [PADD:PMAX],                     // Computational Operations
+                QMADD, QMSUB,                    // Quire Fused Operations
+                [PCVT_P2I:PCVT_P2LU],            // Conversion Operations
+                [PSGNJ:PSGNJX], PMV_P2X,         // Move Operations
+                [PEQ:PLE]         : return 1'b1; // Compare Operations
+                default           : return 1'b0; // all other ops
+            endcase
+        end else
+            return 1'b0;
+    endfunction
+
+    function automatic logic is_rs2_posr (input fu_op op);
+        if (POS_PRESENT) begin // makes function static for non-pos case
+            unique case (op) inside
+                [PADD:PDIV], PMIN, PMAX,         // Computational Operations
+                QMADD, QMSUB,                    // Quire Fused Operations
+                [PSGNJ:PSGNJX],                  // Move Operations
+                [PEQ:PLE], PMV_P2X,              // Compare Operations
+                PSW, QS           : return 1'b1; // Posit Stores
+                default           : return 1'b0; // all other ops
+            endcase
+        end else
+            return 1'b0;
+    endfunction
+
+    // Posits require at most two register fields rs1 and rs2 instead of three,
+    // therefore there is no need for is_imm_posr as in is_imm_fpr
+
+    function automatic logic is_rd_posr (input fu_op op);
+        if (POS_PRESENT) begin // makes function static for non-pos case
+            unique case (op) inside
+                [PADD:PMAX],                     // Computational Operations
+                QROUND,                          // Quire Operations
+                [PCVT_I2P:PCVT_LU2P],            // Conversion Operations
+                [PSGNJ:PSGNJX], PMV_X2P,         // Move Operations
+                PLW, QL           : return 1'b1; // Posit Loads
+                default           : return 1'b0; // all other ops
+            endcase
+        end else
+            return 1'b0;
+    endfunction
+
 
     typedef struct packed {
         logic                     valid;
@@ -817,7 +884,7 @@ package ariane_pkg;
             AMO_MINDU: begin
                 return 2'b11;
             end
-            LW, LWU, SW, FLW, FSW,
+            LW, LWU, SW, FLW, FSW, PLW, PSW,
             AMO_LRW,   AMO_SCW,
             AMO_SWAPW, AMO_ADDW,
             AMO_ANDW,  AMO_ORW,
