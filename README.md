@@ -18,5 +18,3 @@ If you use PERCIVAL in your academic work you can cite us:
       primaryClass={cs.AR}
 }
 ```
-
-NOTE: The posit operators missing in `src/pau/*` are yet to be published and will be open-sourced at a later date.
