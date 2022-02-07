@@ -431,10 +431,11 @@ module pau_top import ariane_pkg::*; (
 
         always_comb begin : latency_mux
             unique case (operator)
-                PADD, PSUB:          latency_d = 2'b10;
+                PADD, PSUB,
+                QMADD, QMSUB:       latency_d = 2'b10;
                 PMUL, PDIV, PSQRT,
-                QROUND,QMADD, QMSUB: latency_d = 2'b01;
-                default:             latency_d = 2'b00;
+                QROUND:             latency_d = 2'b01;
+                default:            latency_d = 2'b00;
             endcase
         end  // latency_mux
 
