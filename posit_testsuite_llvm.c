@@ -13,27 +13,34 @@ int padd_test() {
     g = 0;
 
     asm volatile (
-        "plw	pt0,-24(s0)  \n"
-        "plw	pt1,-28(s0)  \n"
-        "plw	pt2,-32(s0)  \n"
+        "plw    pt0,0(%4)      \n"
+        "plw    pt1,0(%5)      \n"
+        "plw    pt2,0(%6)      \n"
 
-        "padd.s	pt3,pt0,pt1    \n"
-        "padd.s	pt4,pt1,pt0    \n"
-        "psw	pt3,-36(s0)  \n"
-        "psw	pt4,-40(s0)  \n"
+        "padd.s pt3,pt0,pt1    \n"
+        "padd.s pt4,pt1,pt0    \n"
+        "psw    pt3,0(%7)      \n"
+        "psw    pt4,0(%8)      \n"
 
-        "padd.s	pt5,pt2,pt1    \n"
-        "padd.s	pt6,pt0,pt2    \n"
-        "psw	pt5,-44(s0)  \n"
-        "psw	pt6,-48(s0)  \n"
+        "padd.s pt5,pt2,pt1    \n"
+        "padd.s pt6,pt0,pt2    \n"
+        "psw    pt5,0(%9)      \n"
+        "psw    pt6,0(%10)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f), "=rm" (g)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f), "r" (&g)
+        :
     );
 
-    if (d == 0x7F99756F && e == 0x7F99756F && f == 0x807889A6 && g == 0x7F409920) {
+    if (d == 0x7F99756F && e == 0x7F99756F 
+        && f == 0x807889A6 && g == 0x7F409920) {
         printf("PADD test OK\n");
         return 0;
     }
     else {
-        printf("PADD test FAIL - Values: %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g);
+        printf("PADD test FAIL - Values: %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g);
         return 1;
     }
 }
@@ -50,27 +57,34 @@ int psub_test() {
     g = 0;
 
     asm volatile (
-        "plw	pt0,-24(s0)  \n"
-        "plw	pt1,-28(s0)  \n"
-        "plw	pt2,-32(s0)  \n"
+        "plw    pt0,0(%4)      \n"
+        "plw    pt1,0(%5)      \n"
+        "plw    pt2,0(%6)      \n"
 
-        "psub.s	pt3,pt0,pt1    \n" //7f8b987e
-        "psub.s	pt4,pt1,pt0    \n" //80747682
-        "psw	pt3,-36(s0)  \n"
-        "psw	pt4,-40(s0)  \n"
+        "psub.s pt3,pt0,pt1    \n" //7f8b987e
+        "psub.s pt4,pt1,pt0    \n" //80747682
+        "psw    pt3,0(%7)      \n"
+        "psw    pt4,0(%8)      \n"
 
-        "psub.s	pt5,pt2,pt1    \n" //80689423
-        "psub.s	pt6,pt0,pt2    \n" //7fa2984e
-        "psw	pt5,-44(s0)  \n"
-        "psw	pt6,-48(s0)  \n"
+        "psub.s pt5,pt2,pt1    \n" //80689423
+        "psub.s pt6,pt0,pt2    \n" //7fa2984e
+        "psw    pt5,0(%9)      \n"
+        "psw    pt6,0(%10)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f), "=rm" (g)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f), "r" (&g)
+        :
     );
 
-    if (d == 0x7F8B897E && e == 0x80747682 && f == 0x80689423 && g == 0x7FA2984E) {
+    if (d == 0x7F8B897E && e == 0x80747682 
+        && f == 0x80689423 && g == 0x7FA2984E) {
         printf("PSUB test OK\n");
         return 0;
     }
     else {
-        printf("PSUB test FAIL - Values: %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g);
+        printf("PSUB test FAIL - Values: %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g);
         return 1;
     }
 }
@@ -87,27 +101,34 @@ int pmul_test() {
     g = 0;
 
     asm volatile (
-        "plw	pt0,-24(s0)  \n"
-        "plw	pt1,-28(s0)  \n"
-        "plw	pt2,-32(s0)  \n"
+        "plw    pt0,0(%4)      \n"
+        "plw    pt1,0(%5)      \n"
+        "plw    pt2,0(%6)      \n"
 
-        "pmul.s	pt3,pt0,pt1    \n"
-        "pmul.s	pt4,pt1,pt0    \n"
-        "psw	pt3,-36(s0)  \n"
-        "psw	pt4,-40(s0)  \n"
+        "pmul.s pt3,pt0,pt1    \n"
+        "pmul.s pt4,pt1,pt0    \n"
+        "psw    pt3,0(%7)      \n"
+        "psw    pt4,0(%8)      \n"
 
-        "pmul.s	pt5,pt2,pt1    \n"
-        "pmul.s	pt6,pt0,pt2    \n"
-        "psw	pt5,-44(s0)  \n"
-        "psw	pt6,-48(s0)  \n"
+        "pmul.s pt5,pt2,pt1    \n"
+        "pmul.s pt6,pt0,pt2    \n"
+        "psw    pt5,0(%9)      \n"
+        "psw    pt6,0(%10)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f), "=rm" (g)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f), "r" (&g)
+        :
     );
 
-    if (d == 0x7EDAD7ED && e == 0x7EDAD7ED && f == 0x8087DEE8 && g == 0x8209467B) {
+    if (d == 0x7EDAD7ED && e == 0x7EDAD7ED 
+        && f == 0x8087DEE8 && g == 0x8209467B) {
         printf("PMUL test OK\n");
         return 0;
     }
     else {
-        printf("PMUL test FAIL - Values: %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g);
+        printf("PMUL test FAIL - Values: %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g);
         return 1;
     }
 }
@@ -126,31 +147,38 @@ int pdiv_test() {
     zero = 0;
 
     asm volatile (
-        "plw    pt0,-24(s0)  \n"
-        "plw    pt1,-28(s0)  \n"
-        "plw    pt2,-32(s0)  \n"
+        "plw    pt0,0(%5)      \n"
+        "plw    pt1,0(%6)      \n"
+        "plw    pt2,0(%7)      \n"
 
         "pdiv.s pt3,pt0,pt1    \n" // 0.004292628 -> 10654963
         "pdiv.s pt4,pt1,pt0    \n" // 232.957550869 -> 6F47A910
-        "psw    pt3,-36(s0)  \n"
-        "psw    pt4,-40(s0)  \n"
+        "psw    pt3,0(%8)      \n"
+        "psw    pt4,0(%9)      \n"
 
         "pdiv.s pt3,pt2,pt1    \n" // -0.084872878 -> DD22E2B2
         "pdiv.s pt4,pt0,pt2    \n" // -0.050577141 -> E186B031
-        "plw    pt6,-56(s0)  \n"
+        "plw    pt6,0(%13)     \n"
         "pdiv.s pt5,pt0,pt6    \n" // Division by zero
-        "psw    pt3,-44(s0)  \n"
-        "psw    pt4,-48(s0)  \n"
-        "psw    pt5,-52(s0)  \n"
+        "psw    pt3,0(%10)     \n"
+        "psw    pt4,0(%11)     \n"
+        "psw    pt5,0(%12)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f), "=rm" (g), "=rm" (h)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f), "r" (&g), "r" (&h), "r" (&zero)
+        :
     );
 
     // Logarithmic approximate division
-    if (d == 0x10A2CB9E && e == 0x6F5D3462 && f == 0xDC20B108 && g == 0xE14CDBDE && h == 0x80000000) {
+    if (d == 0x10A2CB9E && e == 0x6F5D3462 
+        && f == 0xDC20B108 && g == 0xE14CDBDE && h == 0x80000000) {
         printf("PDIV test OK\n");
         return 0;
     }
     else {
-        printf("PDIV test FAIL - Values: %x %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g, h);
+        printf("PDIV test FAIL - Values: %x %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g, h);
         return 1;
     }
 }
@@ -166,16 +194,21 @@ int psqrt_test() {
     f = 0;
 
     asm volatile (
-        "plw    pt0,-24(s0)  \n"
-        "plw    pt1,-28(s0)  \n"
-        "plw    pt2,-32(s0)  \n"
+        "plw    pt0,0(%3)     \n"
+        "plw    pt1,0(%4)     \n"
+        "plw    pt2,0(%5)     \n"
 
         "psqrt.s pt3,pt0      \n" // 15.03597891 -> 5F0935EA
         "psqrt.s pt4,pt1      \n" // 229.493349066 -> 6F2BF261
         "psqrt.s pt5,pt2      \n" // NaR -> 80000000
-        "psw    pt3,-36(s0)  \n"
-        "psw    pt4,-40(s0)  \n"
-        "psw    pt5,-44(s0)  \n"
+        "psw    pt3,0(%6)     \n"
+        "psw    pt4,0(%7)     \n"
+        "psw    pt5,0(%8)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        :
     );
 
     // Logarithmic approximate sqrt
@@ -184,7 +217,8 @@ int psqrt_test() {
         return 0;
     }
     else {
-        printf("PSQRT test FAIL - Values: %x %x %x %x %x %x\n", a, b, c, d, e, f);
+        printf("PSQRT test FAIL - Values: %x %x %x %x %x %x\n", 
+            a, b, c, d, e, f);
         return 1;
     }
 }
@@ -201,26 +235,33 @@ int pmin_test() {
     g = 0;
 
     asm volatile (
-        "plw	pt0,-24(s0)  \n"
-        "plw	pt1,-28(s0)  \n"
-        "plw	pt2,-32(s0)  \n"
+        "plw    pt0,0(%4)      \n"
+        "plw    pt1,0(%5)      \n"
+        "plw    pt2,0(%6)      \n"
 
         "pmin.s pt3,pt0,pt1    \n" 
         "pmin.s pt4,pt1,pt0    \n" 
         "pmin.s pt5,pt2,pt0    \n" 
         "pmin.s pt6,pt2,pt2    \n" 
-        "psw    pt3,-36(s0)  \n"
-        "psw    pt4,-40(s0)  \n"
-        "psw    pt5,-44(s0)  \n"
-        "psw    pt6,-48(s0)  \n"
+        "psw    pt3,0(%7)      \n"
+        "psw    pt4,0(%8)      \n"
+        "psw    pt5,0(%9)      \n"
+        "psw    pt6,0(%10)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f), "=rm" (g)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f), "r" (&g)
+        :
     );
 
-    if (d == 0x7F6EC2BF && e == 0x7F6EC2BF && f == 0x806E6C7B && g == 0x806E6C7B) {
+    if (d == 0x7F6EC2BF && e == 0x7F6EC2BF 
+        && f == 0x806E6C7B && g == 0x806E6C7B) {
         printf("PMIN test OK\n");
         return 0;
     }
     else {
-        printf("PMIN test FAIL - Values: %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g);
+        printf("PMIN test FAIL - Values: %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g);
         return 1;
     }
 }
@@ -237,26 +278,33 @@ int pmax_test() {
     g = 0;
 
     asm volatile (
-        "plw	pt0,-24(s0)  \n"
-        "plw	pt1,-28(s0)  \n"
-        "plw	pt2,-32(s0)  \n"
+        "plw    pt0,0(%4)      \n"
+        "plw    pt1,0(%5)      \n"
+        "plw    pt2,0(%6)      \n"
 
         "pmax.s pt3,pt0,pt1    \n" 
         "pmax.s pt4,pt1,pt0    \n" 
         "pmax.s pt5,pt2,pt0    \n" 
         "pmax.s pt6,pt2,pt2    \n" 
-        "psw    pt3,-36(s0)  \n"
-        "psw    pt4,-40(s0)  \n"
-        "psw    pt5,-44(s0)  \n"
-        "psw    pt6,-48(s0)  \n"
+        "psw    pt3,0(%7)      \n"
+        "psw    pt4,0(%8)      \n"
+        "psw    pt5,0(%9)      \n"
+        "psw    pt6,0(%10)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f), "=rm" (g)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f), "r" (&g)
+        :
     );
 
-    if (d == 0x7F939D17 && e == 0x7F939D17 && f == 0x7F939D17 && g == 0x806E6C7B) {
+    if (d == 0x7F939D17 && e == 0x7F939D17 
+        && f == 0x7F939D17 && g == 0x806E6C7B) {
         printf("PMAX test OK\n");
         return 0;
     }
     else {
-        printf("PMAX test FAIL - Values: %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g);
+        printf("PMAX test FAIL - Values: %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g);
         return 1;
     }
 }
@@ -272,22 +320,27 @@ int quire_test() {
     f = 0;
 
     asm volatile (
-        "plw      pt3,-24(s0)  \n"
-        "plw      pt4,-28(s0)  \n"
-        "plw      pt5,-32(s0)  \n"
+        "plw    pt3,0(%3)     \n"
+        "plw    pt4,0(%4)     \n"
+        "plw    pt5,0(%5)     \n"
 
-        "qclr.s               \n"    // Quire: 0
-        "qmadd.s  pt3,pt4       \n"  // Quire: 1
-        "qmadd.s  pt5,pt5       \n"  // Quire: 10
-        "qmsub.s  pt4,pt5       \n"  // Quire: 7
-        "qround.s pt6          \n"
-        "psw      pt6,-36(s0)  \n"
-        "qneg.s               \n"    // Quire: -7
-        "qround.s pt6          \n"
-        "psw      pt6,-40(s0)  \n"
-        "qclr.s               \n"    // Quire: 0
-        "qround.s pt6          \n"
-        "psw      pt6,-44(s0)  \n"
+        "qclr.s               \n"  // Quire: 0
+        "qmadd.s  pt3,pt4     \n"  // Quire: 1
+        "qmadd.s  pt5,pt5     \n"  // Quire: 10
+        "qmsub.s  pt4,pt5     \n"  // Quire: 7
+        "qround.s pt6         \n"
+        "psw      pt6,0(%6)   \n"
+        "qneg.s               \n"  // Quire: -7
+        "qround.s pt6         \n"
+        "psw      pt6,0(%7)   \n"
+        "qclr.s               \n"  // Quire: 0
+        "qround.s pt6         \n"
+        "psw      pt6,0(%8)   \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        :
     );
 
     if (d == 0x56000000 && e == 0xAA000000 && f == 0x00000000) {
@@ -295,7 +348,8 @@ int quire_test() {
         return 0;
     }
     else {
-        printf("QUIRE test FAIL - Values: %x %x %x %x %x %x\n", a, b, c, d, e, f);
+        printf("QUIRE test FAIL - Values: %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f);
         return 1;
     }
 }
@@ -311,16 +365,21 @@ int pcvtws_test() {  // Pos to int
     f = 0;
 
     asm volatile (
-        "plw      pt0,-24(s0)  \n"
-        "plw      pt1,-28(s0)  \n"
-        "plw      pt2,-32(s0)  \n"
+        "plw    pt0,0(%3)     \n"
+        "plw    pt1,0(%4)     \n"
+        "plw    pt2,0(%5)     \n"
 
-        "pcvt.w.s t4,pt0       \n"
-        "pcvt.w.s t5,pt1       \n"
-        "pcvt.w.s t6,pt2       \n"
-        "sw       t4,-36(s0)  \n"
-        "sw       t5,-40(s0)  \n"
-        "sw       t6,-44(s0)  \n"
+        "pcvt.w.s t4,pt0      \n"
+        "pcvt.w.s t5,pt1      \n"
+        "pcvt.w.s t6,pt2      \n"
+        "sw       t4,0(%6)    \n"
+        "sw       t5,0(%7)    \n"
+        "sw       t6,0(%8)    \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        : "t4", "t5", "t6"
     );
 
     if (d == 658124288 && e == 196128704 && f == -589761024) {
@@ -328,7 +387,8 @@ int pcvtws_test() {  // Pos to int
         return 0;
     }
     else {
-        printf("PCVTWS test FAIL - Values: %x %x %x %x %x %x\n", a, b, c, d, e, f);
+        printf("PCVTWS test FAIL - Values: %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f);
         return 1;
     }
 }
@@ -345,16 +405,21 @@ int pcvtwus_test() {  // Pos to unsigned int
     f = 1;
 
     asm volatile (
-        "plw      pt0,-24(s0)  \n"
-        "plw      pt1,-28(s0)  \n"
-        "plw      pt2,-32(s0)  \n"
+        "plw    pt0,0(%3)     \n"
+        "plw    pt1,0(%4)     \n"
+        "plw    pt2,0(%5)     \n"
 
-        "pcvt.wu.s t4,pt0       \n"
-        "pcvt.wu.s t5,pt1       \n"
-        "pcvt.wu.s t6,pt2       \n"
-        "sw       t4,-36(s0)  \n"
-        "sw       t5,-40(s0)  \n"
-        "sw       t6,-44(s0)  \n"
+        "pcvt.wu.s t4,pt0     \n"
+        "pcvt.wu.s t5,pt1     \n"
+        "pcvt.wu.s t6,pt2     \n"
+        "sw       t4,0(%6)    \n"
+        "sw       t5,0(%7)    \n"
+        "sw       t6,0(%8)    \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        : "t4", "t5", "t6"
     );
 
     if (d == 3285968896 && e == 196128704 && f == 0) {
@@ -362,7 +427,8 @@ int pcvtwus_test() {  // Pos to unsigned int
         return 0;
     }
     else {
-        printf("PCVTWUS test FAIL - Values: %x %x %x %x %x %x\n", a, b, c, d, e, f);
+        printf("PCVTWUS test FAIL - Values: %x %x %x %x %x %x\n", 
+            a, b, c, d, e, f);
         return 1;
     }
 }
@@ -377,13 +443,17 @@ int pcvtls_test() {  // Pos to long
     d = 0;
 
     asm volatile (
-        "plw      pt0,-24(s0)  \n"
-        "plw      pt1,-28(s0)  \n"
+        "plw    pt0,0(%2)     \n"
+        "plw    pt1,0(%3)     \n"
 
-        "pcvt.l.s t4,pt0       \n"
-        "pcvt.l.s t5,pt1       \n"
-        "sd       t4,-40(s0)  \n"
-        "sd       t5,-48(s0)  \n"
+        "pcvt.l.s t4,pt0      \n"
+        "pcvt.l.s t5,pt1      \n"
+        "sd       t4,0(%4)    \n"
+        "sd       t5,0(%5)    \n"
+
+        : "=rm" (c), "=rm" (d)
+        : "r" (&a), "r" (&b), "r" (&c), "r" (&d)
+        : "t4", "t5"
     );
 
     if (c == 5000003584 && d == -5001003008) {
@@ -391,7 +461,8 @@ int pcvtls_test() {  // Pos to long
         return 0;
     }
     else {
-        printf("PCVTLS test FAIL - Values: %x %x %lx %lx\n", a, b, c, d);
+        printf("PCVTLS test FAIL - Values: %x %x %lx %lx\n", 
+               a, b, c, d);
         return 1;
     }
 }
@@ -408,16 +479,21 @@ int pcvtlus_test() {  // Pos to unsigned long
     f = 1;
 
     asm volatile (
-        "plw      pt0,-24(s0)  \n"
-        "plw      pt1,-28(s0)  \n"
-        "plw      pt2,-32(s0)  \n"
+        "plw    pt0,0(%3)     \n"
+        "plw    pt1,0(%4)     \n"
+        "plw    pt2,0(%5)     \n"
 
-        "pcvt.lu.s t4,pt0       \n"
-        "pcvt.lu.s t5,pt1       \n"
-        "pcvt.lu.s t6,pt2       \n"
-        "sd       t4,-40(s0)  \n"
-        "sd       t5,-48(s0)  \n"
-        "sd       t6,-56(s0)  \n"
+        "pcvt.lu.s t4,pt0     \n"
+        "pcvt.lu.s t5,pt1     \n"
+        "pcvt.lu.s t6,pt2     \n"
+        "sd        t4,0(%6)   \n"
+        "sd        t5,0(%7)   \n"
+        "sd        t6,0(%8)   \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        : "t4", "t5", "t6"
     );
 
     if (d == 5000003584 && e == 17435685957364875264ull && f == 0) {
@@ -425,7 +501,8 @@ int pcvtlus_test() {  // Pos to unsigned long
         return 0;
     }
     else {
-        printf("PCVTLUS test FAIL - Values: %x %x %x %lx %lx %lx\n", a, b, c, d, e, f);
+        printf("PCVTLUS test FAIL - Values: %x %x %x %lx %lx %lx\n", 
+            a, b, c, d, e, f);
         return 1;
     }
 }
@@ -441,16 +518,21 @@ int pcvtsw_test() {  // Int to pos
     f = 0;
 
     asm volatile (
-        "lw       t0,-24(s0)  \n"
-        "lw       t1,-28(s0)  \n"
-        "lw       t2,-32(s0)  \n"
+        "lw       t0,0(%3)   \n"
+        "lw       t1,0(%4)   \n"
+        "lw       t2,0(%5)   \n"
 
-        "pcvt.s.w pt4,t0       \n"
-        "pcvt.s.w pt5,t1       \n"
-        "pcvt.s.w pt6,t2       \n"
-        "psw      pt4,-36(s0)  \n"
-        "psw      pt5,-40(s0)  \n"
-        "psw      pt6,-44(s0)  \n"
+        "pcvt.s.w pt4,t0     \n"
+        "pcvt.s.w pt5,t1     \n"
+        "pcvt.s.w pt6,t2     \n"
+        "psw      pt4,0(%6)  \n"
+        "psw      pt5,0(%7)  \n"
+        "psw      pt6,0(%8)  \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        : "t0", "t1", "t2"
     );
 
     if (d == 0x7F939D17 && e == 0x7F6EC2BF && f == 0x806E6C7B) {
@@ -458,7 +540,8 @@ int pcvtsw_test() {  // Int to pos
         return 0;
     }
     else {
-        printf("PCVTSW test FAIL - Values: %x %x %x %x %x %x\n", a, b, c, d, e, f);
+        printf("PCVTSW test FAIL - Values: %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f);
         return 1;
     }
 }
@@ -475,16 +558,21 @@ int pcvtswu_test() {  // Unsigned int to pos
     f = 0;
 
     asm volatile (
-        "lw        t0,-24(s0)  \n"
-        "lw        t1,-28(s0)  \n"
-        "lw        t2,-32(s0)  \n"
+        "lw        t0,0(%3)   \n"
+        "lw        t1,0(%4)   \n"
+        "lw        t2,0(%5)   \n"
 
-        "pcvt.s.wu pt4,t0       \n"
-        "pcvt.s.wu pt5,t1       \n"
-        "pcvt.s.wu pt6,t2       \n"
-        "psw       pt4,-36(s0)  \n"
-        "psw       pt5,-40(s0)  \n"
-        "psw       pt6,-44(s0)  \n"
+        "pcvt.s.wu pt4,t0     \n"
+        "pcvt.s.wu pt5,t1     \n"
+        "pcvt.s.wu pt6,t2     \n"
+        "psw       pt4,0(%6)  \n"
+        "psw       pt5,0(%7)  \n"
+        "psw       pt6,0(%8)  \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        : "t0", "t1", "t2"
     );
 
     if (d == 0x7FB87B7D && e == 0x7F6EC2BF && f == 0) {
@@ -492,7 +580,8 @@ int pcvtswu_test() {  // Unsigned int to pos
         return 0;
     }
     else {
-        printf("PCVTSWU test FAIL - Values: %x %x %x %x %x %x\n", a, b, c, d, e, f);
+        printf("PCVTSWU test FAIL - Values: %x %x %x %x %x %x\n", 
+            a, b, c, d, e, f);
         return 1;
     }
 }
@@ -507,13 +596,17 @@ int pcvtsl_test() {  // Long to pos
     d = 0;
 
     asm volatile (
-        "ld       t0,-32(s0)  \n"
-        "ld       t1,-40(s0)  \n"
+        "ld       t0,0(%2)     \n"
+        "ld       t1,0(%3)     \n"
 
         "pcvt.s.l pt4,t0       \n"
         "pcvt.s.l pt5,t1       \n"
-        "psw      pt4,-44(s0)  \n"
-        "psw      pt5,-48(s0)  \n"
+        "psw      pt4,0(%4)    \n"
+        "psw      pt5,0(%5)    \n"
+
+        : "=rm" (c), "=rm" (d)
+        : "r" (&a), "r" (&b), "r" (&c), "r" (&d)
+        : "t0", "t1"
     );
 
     if (c == 0x7FC15030 && d == 0x803EAF56) {
@@ -538,16 +631,21 @@ int pcvtslu_test() {  // Unsigned long to pos
     f = 1;
 
     asm volatile (
-        "ld       t0,-32(s0)  \n"
-        "ld       t1,-40(s0)  \n"
-        "ld       t2,-48(s0)  \n"
+        "ld       t0,0(%3)      \n"
+        "ld       t1,0(%4)      \n"
+        "ld       t2,0(%5)      \n"
 
         "pcvt.s.lu pt4,t0       \n"
         "pcvt.s.lu pt5,t1       \n"
         "pcvt.s.lu pt6,t2       \n"
-        "psw      pt4,-52(s0)  \n"
-        "psw      pt5,-56(s0)  \n"
-        "psw      pt6,-60(s0)  \n"
+        "psw      pt4,0(%6)     \n"
+        "psw      pt5,0(%7)     \n"
+        "psw      pt6,0(%8)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        : "t0", "t1", "t2"
     );
 
     if (d == 0x7FC15030 && e == 0x7FFFBE3F && f == 0) {
@@ -555,7 +653,8 @@ int pcvtslu_test() {  // Unsigned long to pos
         return 0;
     }
     else {
-        printf("PCVTSLU test FAIL - Values: %lx %lx %lx %x %x %x\n", a, b, c, d, e, f);
+        printf("PCVTSLU test FAIL - Values: %lx %lx %lx %x %x %x\n", 
+               a, b, c, d, e, f);
         return 1;
     }
 }
@@ -573,27 +672,34 @@ int psgnj_test() {
     h = 0;
 
     asm volatile (
-        "plw     pt0,-24(s0)  \n"
-        "plw     pt1,-28(s0)  \n"
-        "plw     pt2,-32(s0)  \n"
-        "plw     pt3,-36(s0)  \n"
+        "plw     pt0,0(%4)      \n"
+        "plw     pt1,0(%5)      \n"
+        "plw     pt2,0(%6)      \n"
+        "plw     pt3,0(%7)      \n"
 
         "psgnj.s pt4,pt0,pt1    \n" 
         "psgnj.s pt5,pt0,pt2    \n" 
-        "psw     pt4,-40(s0)  \n"
-        "psw     pt5,-44(s0)  \n"
+        "psw     pt4,0(%8)      \n"
+        "psw     pt5,0(%9)      \n"
         "psgnj.s pt4,pt2,pt1    \n" 
         "psgnj.s pt5,pt2,pt3    \n" 
-        "psw     pt4,-48(s0)  \n"
-        "psw     pt5,-52(s0)  \n"
+        "psw     pt4,0(%10)     \n"
+        "psw     pt5,0(%11)     \n"
+
+        : "=rm" (e), "=rm" (f), "=rm" (g), "=rm" (h)
+        : "r" (&a), "r" (&b), "r" (&c), "r" (&d), 
+          "r" (&e), "r" (&f), "r" (&g), "r" (&h)
+        :
     );
 
-    if (e == 0x7F939D17 && f == 0x806C62E9 && g == 0x7F919385 && h == 0x806E6C7B) {
+    if (e == 0x7F939D17 && f == 0x806C62E9 
+        && g == 0x7F919385 && h == 0x806E6C7B) {
         printf("PSGNJ test OK\n");
         return 0;
     }
     else {
-        printf("PSGNJ test FAIL - Values: %x %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g, h);
+        printf("PSGNJ test FAIL - Values: %x %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g, h);
         return 1;
     }
 }
@@ -611,27 +717,34 @@ int psgnjn_test() {
     h = 0;
 
     asm volatile (
-        "plw     pt0,-24(s0)  \n"
-        "plw     pt1,-28(s0)  \n"
-        "plw     pt2,-32(s0)  \n"
-        "plw     pt3,-36(s0)  \n"
+        "plw     pt0,0(%4)      \n"
+        "plw     pt1,0(%5)      \n"
+        "plw     pt2,0(%6)      \n"
+        "plw     pt3,0(%7)      \n"
 
         "psgnjn.s pt4,pt0,pt1   \n" 
         "psgnjn.s pt5,pt0,pt2   \n" 
-        "psw     pt4,-40(s0)  \n"
-        "psw     pt5,-44(s0)  \n"
+        "psw      pt4,0(%8)     \n"
+        "psw      pt5,0(%9)     \n"
         "psgnjn.s pt4,pt2,pt1   \n" 
         "psgnjn.s pt5,pt2,pt3   \n" 
-        "psw     pt4,-48(s0)  \n"
-        "psw     pt5,-52(s0)  \n"
+        "psw      pt4,0(%10)    \n"
+        "psw      pt5,0(%11)    \n"
+
+        : "=rm" (e), "=rm" (f), "=rm" (g), "=rm" (h)
+        : "r" (&a), "r" (&b), "r" (&c), "r" (&d), 
+          "r" (&e), "r" (&f), "r" (&g), "r" (&h)
+        :
     );
 
-    if (e == 0x806C62E9 && f == 0x7F939D17 && g == 0x806E6C7B && h == 0x7F919385) {
+    if (e == 0x806C62E9 && f == 0x7F939D17 
+        && g == 0x806E6C7B && h == 0x7F919385) {
         printf("PSGNJN test OK\n");
         return 0;
     }
     else {
-        printf("PSGNJN test FAIL - Values: %x %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g, h);
+        printf("PSGNJN test FAIL - Values: %x %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g, h);
         return 1;
     }
 }
@@ -649,27 +762,34 @@ int psgnjnx_test() {
     h = 0;
 
     asm volatile (
-        "plw     pt0,-24(s0)  \n"
-        "plw     pt1,-28(s0)  \n"
-        "plw     pt2,-32(s0)  \n"
-        "plw     pt3,-36(s0)  \n"
+        "plw     pt0,0(%4)      \n"
+        "plw     pt1,0(%5)      \n"
+        "plw     pt2,0(%6)      \n"
+        "plw     pt3,0(%7)      \n"
 
         "psgnjx.s pt4,pt0,pt1   \n" 
         "psgnjx.s pt5,pt0,pt2   \n" 
-        "psw     pt4,-40(s0)  \n"
-        "psw     pt5,-44(s0)  \n"
+        "psw      pt4,0(%8)     \n"
+        "psw      pt5,0(%9)     \n"
         "psgnjx.s pt4,pt2,pt1   \n" 
         "psgnjx.s pt5,pt2,pt3   \n" 
-        "psw     pt4,-48(s0)  \n"
-        "psw     pt5,-52(s0)  \n"
+        "psw      pt4,0(%10)    \n"
+        "psw      pt5,0(%11)    \n"
+
+        : "=rm" (e), "=rm" (f), "=rm" (g), "=rm" (h)
+        : "r" (&a), "r" (&b), "r" (&c), "r" (&d), 
+          "r" (&e), "r" (&f), "r" (&g), "r" (&h)
+        :
     );
 
-    if (e == 0x7F939D17 && f == 0x806C62E9 && g == 0x806E6C7B && h == 0x7F919385) {
+    if (e == 0x7F939D17 && f == 0x806C62E9 
+        && g == 0x806E6C7B && h == 0x7F919385) {
         printf("PSGNJNX test OK\n");
         return 0;
     }
     else {
-        printf("PSGNJNX test FAIL - Values: %x %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g, h);
+        printf("PSGNJNX test FAIL - Values: %x %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g, h);
         return 1;
     }
 }
@@ -685,16 +805,21 @@ int pmvxw_test() {  // Move pos to int reg
     f = 0;
 
     asm volatile (
-        "plw      pt0,-24(s0)  \n"
-        "plw      pt1,-28(s0)  \n"
-        "plw      pt2,-32(s0)  \n"
+        "plw    pt0,0(%3)      \n"
+        "plw    pt1,0(%4)      \n"
+        "plw    pt2,0(%5)      \n"
 
         "pmv.x.w  t4,pt0       \n"
         "pmv.x.w  t5,pt1       \n"
         "pmv.x.w  t6,pt2       \n"
-        "sw       t4,-36(s0)   \n"
-        "sw       t5,-40(s0)   \n"
-        "sw       t6,-44(s0)   \n"
+        "sw       t4,0(%6)     \n"
+        "sw       t5,0(%7)     \n"
+        "sw       t6,0(%8)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        : "t4", "t5", "t6"
     );
 
     if (d == 2140380439 && e == 2137965247 && f == -2140246917) {
@@ -702,7 +827,8 @@ int pmvxw_test() {  // Move pos to int reg
         return 0;
     }
     else {
-        printf("PMVXW test FAIL - Values: %x %x %x %x %x %x\n", a, b, c, d, e, f);
+        printf("PMVXW test FAIL - Values: %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f);
         return 1;
     }
 }
@@ -718,16 +844,21 @@ int pmvwx_test() {  // Move int to pos reg
     f = 0;
 
     asm volatile (
-        "lw       t0,-24(s0)  \n"
-        "lw       t1,-28(s0)  \n"
-        "lw       t2,-32(s0)  \n"
+        "lw       t0,0(%3)     \n"
+        "lw       t1,0(%4)     \n"
+        "lw       t2,0(%5)     \n"
 
         "pmv.w.x  pt4,t0       \n"
         "pmv.w.x  pt5,t1       \n"
         "pmv.w.x  pt6,t2       \n"
-        "psw      pt4,-36(s0)  \n"
-        "psw      pt5,-40(s0)  \n"
-        "psw      pt6,-44(s0)  \n"
+        "psw      pt4,0(%6)    \n"
+        "psw      pt5,0(%7)    \n"
+        "psw      pt6,0(%8)    \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        : "t0", "t1", "t2"
     );
 
     if (d == 0x273A2E02 && e == 0x0BB0AFBC && f == 0xDCD8F601) {
@@ -735,7 +866,8 @@ int pmvwx_test() {  // Move int to pos reg
         return 0;
     }
     else {
-        printf("PMVWX test FAIL - Values: %x %x %x %x %x %x\n", a, b, c, d, e, f);
+        printf("PMVWX test FAIL - Values: %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f);
         return 1;
     }
 }
@@ -751,16 +883,21 @@ int peq_test() {
     f = 0;
 
     asm volatile (
-        "plw    pt0,-24(s0)  \n"
-        "plw    pt1,-28(s0)  \n"
-        "plw    pt2,-32(s0)  \n"
+        "plw    pt0,0(%3)      \n"
+        "plw    pt1,0(%4)      \n"
+        "plw    pt2,0(%5)      \n"
 
         "peq.s  t3,pt0,pt1    \n" 
         "peq.s  t4,pt1,pt1    \n" 
         "peq.s  t5,pt2,pt2    \n" 
-        "sw     t3,-36(s0)  \n"
-        "sw     t4,-40(s0)  \n"
-        "sw     t5,-44(s0)  \n"
+        "sw     t3,0(%6)      \n"
+        "sw     t4,0(%7)      \n"
+        "sw     t5,0(%8)      \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f)
+        : "t3", "t4", "t5"
     );
 
     if (d == 0 && e == 1 && f == 1) {
@@ -768,7 +905,8 @@ int peq_test() {
         return 0;
     }
     else {
-        printf("PEQ test FAIL - Values: %x %x %x %x %x %x\n", a, b, c, d, e, f);
+        printf("PEQ test FAIL - Values: %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f);
         return 1;
     }
 }
@@ -786,20 +924,25 @@ int plt_test() {
     h = 1;
 
     asm volatile (
-        "plw    pt0,-24(s0)  \n"
-        "plw    pt1,-28(s0)  \n"
-        "plw    pt2,-32(s0)  \n"
+        "plw    pt0,0(%5)     \n"
+        "plw    pt1,0(%6)     \n"
+        "plw    pt2,0(%7)     \n"
 
         "plt.s  t3,pt0,pt1    \n" 
         "plt.s  t4,pt1,pt0    \n" 
         "plt.s  t5,pt2,pt0    \n" 
         "plt.s  t6,pt0,pt2    \n" 
-        "sw     t3,-36(s0)  \n"
-        "sw     t4,-40(s0)  \n"
-        "sw     t5,-44(s0)  \n"
-        "sw     t6,-48(s0)  \n"
+        "sw     t3,0(%8)      \n"
+        "sw     t4,0(%9)      \n"
+        "sw     t5,0(%10)     \n"
+        "sw     t6,0(%11)     \n"
         "plt.s  t6,pt2,pt2    \n" 
-        "sw     t6,-52(s0)  \n"
+        "sw     t6,0(%12)     \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f), "=rm" (g), "=rm" (h)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f), "r" (&g), "r" (&h)
+        : "t3", "t4", "t5", "t6"
     );
 
     if (d == 0 && e == 1 && f == 1 && g == 0 && h == 0) {
@@ -807,7 +950,8 @@ int plt_test() {
         return 0;
     }
     else {
-        printf("PLT test FAIL - Values: %x %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g, h);
+        printf("PLT test FAIL - Values: %x %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g, h);
         return 1;
     }
 }
@@ -824,18 +968,23 @@ int ple_test() {
     g = 0;
 
     asm volatile (
-        "plw    pt0,-24(s0)  \n"
-        "plw    pt1,-28(s0)  \n"
-        "plw    pt2,-32(s0)  \n"
+        "plw    pt0,0(%4)  \n"
+        "plw    pt1,0(%5)  \n"
+        "plw    pt2,0(%6)  \n"
 
         "ple.s  t3,pt0,pt1    \n" 
         "ple.s  t4,pt1,pt0    \n" 
         "ple.s  t5,pt2,pt0    \n" 
         "ple.s  t6,pt2,pt2    \n" 
-        "sw     t3,-36(s0)  \n"
-        "sw     t4,-40(s0)  \n"
-        "sw     t5,-44(s0)  \n"
-        "sw     t6,-48(s0)  \n"
+        "sw     t3,0(%7)  \n"
+        "sw     t4,0(%8)  \n"
+        "sw     t5,0(%9)  \n"
+        "sw     t6,0(%10)  \n"
+
+        : "=rm" (d), "=rm" (e), "=rm" (f), "=rm" (g)
+        : "r" (&a), "r" (&b), "r" (&c), 
+          "r" (&d), "r" (&e), "r" (&f), "r" (&g)
+        : "t3", "t4", "t5", "t6"
     );
 
     if (d == 0 && e == 1 && f == 1 && g == 1) {
@@ -843,7 +992,8 @@ int ple_test() {
         return 0;
     }
     else {
-        printf("PLE test FAIL - Values: %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g);
+        printf("PLE test FAIL - Values: %x %x %x %x %x %x %x\n", 
+               a, b, c, d, e, f, g);
         return 1;
     }
 }
