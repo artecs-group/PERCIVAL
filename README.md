@@ -9,13 +9,14 @@ You can find the original CVA6 repo here: https://github.com/openhwgroup/cva6
 If you use PERCIVAL in your academic work you can cite us:
 
 ```
-@misc{mallasén2021percival,
-      title={PERCIVAL: Open-Source Posit RISC-V Core with Quire Capability},
-      author={David Mallasén and Raul Murillo and Alberto A. Del Barrio and Guillermo Botella and Luis Piñuel and Manuel Prieto},
-      year={2021},
-      eprint={2111.15286},
-      archivePrefix={arXiv},
-      primaryClass={cs.AR}
+@article{mallasen2022PERCIVAL,
+  title = {PERCIVAL: Open-Source Posit RISC-V Core With Quire Capability},
+  author = {Mallasén, David and Murillo, Raul and Del Barrio, Alberto A. and Botella, Guillermo and Piñuel, Luis and Prieto-Matias, Manuel},
+  year = {2022},
+  journal = {IEEE Transactions on Emerging Topics in Computing},
+  pages = {1--12},
+  issn = {2168-6750},
+  doi = {10.1109/TETC.2022.3187199}
 }
 ```
 ## Posit Arithmetic Unit (PAU)
