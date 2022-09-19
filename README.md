@@ -2,6 +2,8 @@
 
 PERCIVAL is an application-level posit capable RISC-V core based on CVA6 that can execute all posit instructions, including the quire fused operations.
 
+You can find the Xposit RISC-V custom extension for posit arithmetic used together with this repository here: https://github.com/artecs-group/llvm-xposit
+
 You can find the original CVA6 repo here: https://github.com/openhwgroup/cva6
 
 ## Publication
@@ -14,7 +16,9 @@ If you use PERCIVAL in your academic work you can cite us:
   author = {Mallasén, David and Murillo, Raul and Del Barrio, Alberto A. and Botella, Guillermo and Piñuel, Luis and Prieto-Matias, Manuel},
   year = {2022},
   journal = {IEEE Transactions on Emerging Topics in Computing},
-  pages = {1--12},
+  volume = {10},
+  number = {3},
+  pages = {1241-1252},
   issn = {2168-6750},
   doi = {10.1109/TETC.2022.3187199}
 }
