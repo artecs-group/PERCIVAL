@@ -6,6 +6,9 @@ You can find the Xposit RISC-V custom extension for posit arithmetic used togeth
 
 You can find the original CVA6 repo here: https://github.com/openhwgroup/cva6
 
+# 64-bit version (Big-PERCIVAL) coming soon!
+In the meantime, you can read about it in our pre-print: https://doi.org/10.48550/arXiv.2305.06946
+
 ## Publication
 
 If you use PERCIVAL in your academic work you can cite us:
