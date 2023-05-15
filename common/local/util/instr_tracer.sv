@@ -35,6 +35,7 @@ module instr_tracer (
   // shadow copy of the register files
   logic [63:0] gp_reg_file [32];
   logic [63:0] fp_reg_file [32];
+  logic [31:0] pos_reg_file [32];
   // 64 bit clock tick count
   longint unsigned clk_ticks;
   int f, commit_log;
@@ -60,6 +61,7 @@ module instr_tracer (
     // initialize register 0
     gp_reg_file  = '{default:0};
     fp_reg_file  = '{default:0};
+    pos_reg_file  = '{default:0};
 
     forever begin
       automatic ariane_pkg::bp_resolve_t bp_instruction = '0;
@@ -128,10 +130,12 @@ module instr_tracer (
           // the scoreboards issue entry still contains the immediate value as a result
           // check if the write back is valid, if not we need to source the result from the register file
           // as the most recent version of this register will be there.
-          if (tracer_if.pck.we_gpr[i] || tracer_if.pck.we_fpr[i]) begin
+          if (tracer_if.pck.we_gpr[i] || tracer_if.pck.we_fpr[i] || tracer_if.pck.we_posr[i]) begin
             printInstr(issue_sbe, issue_commit_instruction, tracer_if.pck.wdata[i], address_mapping, tracer_if.pck.priv_lvl, tracer_if.pck.debug_mode, bp_instruction);
           end else if (ariane_pkg::is_rd_fpr(commit_instruction.op)) begin
             printInstr(issue_sbe, issue_commit_instruction, fp_reg_file[commit_instruction.rd], address_mapping, tracer_if.pck.priv_lvl, tracer_if.pck.debug_mode, bp_instruction);
+          end else if (ariane_pkg::is_rd_posr(commit_instruction.op)) begin
+            printInstr(issue_sbe, issue_commit_instruction, pos_reg_file[commit_instruction.rd], address_mapping, tracer_if.pck.priv_lvl, tracer_if.pck.debug_mode, bp_instruction);
           end else begin
             printInstr(issue_sbe, issue_commit_instruction, gp_reg_file[commit_instruction.rd], address_mapping, tracer_if.pck.priv_lvl, tracer_if.pck.debug_mode, bp_instruction);
           end
@@ -153,6 +157,8 @@ module instr_tracer (
           gp_reg_file[tracer_if.pck.waddr[i]] = tracer_if.pck.wdata[i];
         end else if (tracer_if.pck.we_fpr[i]) begin
           fp_reg_file[tracer_if.pck.waddr[i]] = tracer_if.pck.wdata[i];
+        end else if (tracer_if.pck.we_posr[i]) begin
+          pos_reg_file[tracer_if.pck.waddr[i]] = tracer_if.pck.wdata[i];
         end
       end
       // --------------

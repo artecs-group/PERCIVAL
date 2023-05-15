@@ -56,6 +56,7 @@ module alu import ariane_pkg::*;(
       unique case (fu_data_i.operator)
         // ADDER OPS
         EQ,  NE,
+        PEQ, PLE,
         SUB, SUBW: adder_op_b_negate = 1'b1;
 
         default: ;
@@ -147,15 +148,25 @@ module alu import ariane_pkg::*;(
     // ------------
 
     always_comb begin
+        riscv::xlen_t fu_operand_a;
+        riscv::xlen_t fu_operand_b;
+
         logic sgn;
         sgn = 1'b0;
 
-        if ((fu_data_i.operator == SLTS) ||
-            (fu_data_i.operator == LTS)  ||
-            (fu_data_i.operator == GES))
+        if (fu_data_i.operator inside {SLTS, LTS, GES, PLT, PLE, PMIN, PMAX})
             sgn = 1'b1;
 
-        less = ($signed({sgn & fu_data_i.operand_a[riscv::XLEN-1], fu_data_i.operand_a})  <  $signed({sgn & fu_data_i.operand_b[riscv::XLEN-1], fu_data_i.operand_b}));
+        // Sign extend posit32 operands for L comparisons
+        if (POS_PRESENT && riscv::XLEN > POSLEN && fu_data_i.operator inside {PLT, PLE, PMIN, PMAX}) begin
+            fu_operand_a = {{riscv::XLEN-POSLEN{fu_data_i.operand_a[POSLEN-1]}}, fu_data_i.operand_a[POSLEN-1:0]};
+            fu_operand_b = {{riscv::XLEN-POSLEN{fu_data_i.operand_b[POSLEN-1]}}, fu_data_i.operand_b[POSLEN-1:0]};
+        end else begin
+            fu_operand_a = fu_data_i.operand_a;
+            fu_operand_b = fu_data_i.operand_b;
+        end
+
+        less = ($signed({sgn & fu_operand_a[riscv::XLEN-1], fu_operand_a})  <  $signed({sgn & fu_operand_b[riscv::XLEN-1], fu_operand_b}));
     end
 
     // -----------
@@ -183,6 +194,15 @@ module alu import ariane_pkg::*;(
 
             // Comparison Operations
             SLTS,  SLTU: result_o = {{riscv::XLEN-1{1'b0}}, less};
+
+            // Posit Comparison Operations
+            PEQ: result_o = {{riscv::XLEN-1{1'b0}}, adder_z_flag};
+            PLT: result_o = {{riscv::XLEN-1{1'b0}}, less};
+            PLE: result_o = {{riscv::XLEN-1{1'b0}}, less | adder_z_flag};
+
+            // Posit Min/Max Operations
+            PMIN: result_o = less ? fu_data_i.operand_a : fu_data_i.operand_b;
+            PMAX: result_o = less ? fu_data_i.operand_b : fu_data_i.operand_a;
 
             default: ; // default case to suppress unique warning
         endcase

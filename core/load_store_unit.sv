@@ -373,7 +373,7 @@ module load_store_unit import ariane_pkg::*; #(
         if (lsu_ctrl.valid) begin
             case (lsu_ctrl.operator)
                 // double word
-                LD, SD, FLD, FSD,
+                LD, SD, FLD, FSD, PLD, PSD,
                 AMO_LRD, AMO_SCD,
                 AMO_SWAPD, AMO_ADDD, AMO_ANDD, AMO_ORD,
                 AMO_XORD, AMO_MAXD, AMO_MAXDU, AMO_MIND,
@@ -383,7 +383,7 @@ module load_store_unit import ariane_pkg::*; #(
                     end
                 end
                 // word
-                LW, LWU, SW, FLW, FSW,
+                LW, LWU, SW, FLW, FSW, PLW, PSW,
                 AMO_LRW, AMO_SCW,
                 AMO_SWAPW, AMO_ADDW, AMO_ANDW, AMO_ORW,
                 AMO_XORW, AMO_MAXW, AMO_MAXWU, AMO_MINW,

@@ -137,6 +137,13 @@ module cva6 import ariane_pkg::*; #(
   riscv::xlen_t             fpu_result_ex_id;
   logic                     fpu_valid_ex_id;
   exception_t               fpu_exception_ex_id;
+  // PAU
+  logic                     pau_valid_id_ex;
+  logic                     pau_ready_ex_id;
+  logic                     pau_valid_ex_id;
+  logic [TRANS_ID_BITS-1:0] pau_trans_id_ex_id;
+  riscv::xlen_t             pau_result_ex_id;
+  exception_t               pau_exception_ex_id;
   // CSR
   logic                     csr_valid_id_ex;
   // CVXIF
@@ -172,6 +179,7 @@ module cva6 import ariane_pkg::*; #(
   logic [NR_COMMIT_PORTS-1:0][riscv::XLEN-1:0] wdata_commit_id;
   logic [NR_COMMIT_PORTS-1:0]       we_gpr_commit_id;
   logic [NR_COMMIT_PORTS-1:0]       we_fpr_commit_id;
+  logic [NR_COMMIT_PORTS-1:0]       we_posr_commit_id;
   // --------------
   // CSR <-> *
   // --------------
@@ -349,6 +357,9 @@ module cva6 import ariane_pkg::*; #(
     .fpu_valid_o                ( fpu_valid_id_ex              ),
     .fpu_fmt_o                  ( fpu_fmt_id_ex                ),
     .fpu_rm_o                   ( fpu_rm_id_ex                 ),
+    // PAU
+    .pau_valid_o                ( pau_valid_id_ex              ),
+    .pau_ready_i                ( pau_ready_ex_id              ),
     // CSR
     .csr_valid_o                ( csr_valid_id_ex              ),
     // CVXIF
@@ -357,16 +368,17 @@ module cva6 import ariane_pkg::*; #(
     .x_off_instr_o              ( x_off_instr_id_ex            ),
     // Commit
     .resolved_branch_i          ( resolved_branch              ),
-    .trans_id_i                 ( {flu_trans_id_ex_id,  load_trans_id_ex_id,  store_trans_id_ex_id,   fpu_trans_id_ex_id, x_trans_id_ex_id}),
-    .wbdata_i                   ( {flu_result_ex_id,    load_result_ex_id,    store_result_ex_id,       fpu_result_ex_id, x_result_ex_id}),
-    .ex_ex_i                    ( {flu_exception_ex_id, load_exception_ex_id, store_exception_ex_id, fpu_exception_ex_id, x_exception_ex_id}),
-    .wt_valid_i                 ( {flu_valid_ex_id,     load_valid_ex_id,     store_valid_ex_id,         fpu_valid_ex_id, x_valid_ex_id}),
+    .trans_id_i                 ( {flu_trans_id_ex_id,  load_trans_id_ex_id,  store_trans_id_ex_id,   fpu_trans_id_ex_id, x_trans_id_ex_id,  pau_trans_id_ex_id }),
+    .wbdata_i                   ( {flu_result_ex_id,    load_result_ex_id,    store_result_ex_id,       fpu_result_ex_id, x_result_ex_id,    pau_result_ex_id }),
+    .ex_ex_i                    ( {flu_exception_ex_id, load_exception_ex_id, store_exception_ex_id, fpu_exception_ex_id, x_exception_ex_id, pau_exception_ex_id }),
+    .wt_valid_i                 ( {flu_valid_ex_id,     load_valid_ex_id,     store_valid_ex_id,         fpu_valid_ex_id, x_valid_ex_id,     pau_valid_ex_id }),
     .x_we_i                     ( x_we_ex_id               ),
 
     .waddr_i                    ( waddr_commit_id              ),
     .wdata_i                    ( wdata_commit_id              ),
     .we_gpr_i                   ( we_gpr_commit_id             ),
     .we_fpr_i                   ( we_fpr_commit_id             ),
+    .we_posr_i                  ( we_posr_commit_id            ),
     .commit_instr_o             ( commit_instr_id_commit       ),
     .commit_ack_i               ( commit_ack                   ),
     .*
@@ -450,6 +462,13 @@ module cva6 import ariane_pkg::*; #(
     .x_we_o                 ( x_we_ex_id                  ),
     .cvxif_req_o            ( cvxif_req_o                   ),
     .cvxif_resp_i           ( cvxif_resp_i                  ),
+    // PAU
+    .pau_valid_i            ( pau_valid_id_ex             ),
+    .pau_ready_o            ( pau_ready_ex_id             ),
+    .pau_valid_o            ( pau_valid_ex_id             ),
+    .pau_trans_id_o         ( pau_trans_id_ex_id          ),
+    .pau_result_o           ( pau_result_ex_id            ),
+    .pau_exception_o        ( pau_exception_ex_id         ),
     // Performance counters
     .itlb_miss_o            ( itlb_miss_ex_perf           ),
     .dtlb_miss_o            ( dtlb_miss_ex_perf           ),
@@ -500,6 +519,7 @@ module cva6 import ariane_pkg::*; #(
     .wdata_o                ( wdata_commit_id               ),
     .we_gpr_o               ( we_gpr_commit_id              ),
     .we_fpr_o               ( we_fpr_commit_id              ),
+    .we_posr_o              ( we_posr_commit_id             ),
     .commit_lsu_o           ( lsu_commit_commit_ex          ),
     .commit_lsu_ready_i     ( lsu_commit_ready_ex_commit    ),
     .commit_tran_id_o       ( lsu_commit_trans_id           ),
@@ -813,6 +833,7 @@ module cva6 import ariane_pkg::*; #(
   assign tracer_if.wdata             = wdata_commit_id;
   assign tracer_if.we_gpr            = we_gpr_commit_id;
   assign tracer_if.we_fpr            = we_fpr_commit_id;
+  assign tracer_if.we_posr           = we_posr_commit_id;
   // commit
   assign tracer_if.commit_instr      = commit_instr_id_commit;
   assign tracer_if.commit_ack        = commit_ack;

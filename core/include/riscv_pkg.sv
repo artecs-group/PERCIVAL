@@ -22,6 +22,7 @@ package riscv;
     // ----------------------
     localparam XLEN = cva6_config_pkg::CVA6ConfigXlen;
     localparam FPU_EN = cva6_config_pkg::CVA6ConfigFpuEn;
+    localparam PAU_EN = cva6_config_pkg::CVA6ConfigPauEn;
 
     // ----------------------
     // Data and Address length

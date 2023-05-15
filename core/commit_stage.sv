@@ -31,6 +31,7 @@ module commit_stage import ariane_pkg::*; #(
     output  logic [NR_COMMIT_PORTS-1:0][riscv::XLEN-1:0] wdata_o,       // register file write data
     output  logic [NR_COMMIT_PORTS-1:0]             we_gpr_o,           // register file write enable
     output  logic [NR_COMMIT_PORTS-1:0]             we_fpr_o,           // floating point register enable
+    output  logic [NR_COMMIT_PORTS-1:0]             we_posr_o,          // posit register enable
     // Atomic memory operations
     input  amo_resp_t                               amo_resp_i,         // result of AMO operation
     // to CSR file and PC Gen (because on certain CSR instructions we'll need to flush the whole pipeline)
@@ -99,6 +100,7 @@ module commit_stage import ariane_pkg::*; #(
         we_gpr_o[0]        = 1'b0;
         we_gpr_o[1]        = 1'b0;
         we_fpr_o           = '{default: 1'b0};
+        we_posr_o          = '{default: 1'b0};
         commit_lsu_o       = 1'b0;
         commit_csr_o       = 1'b0;
         // amos will commit on port 0
@@ -120,6 +122,8 @@ module commit_stage import ariane_pkg::*; #(
             commit_ack_o[0] = 1'b1;
             if (is_rd_fpr(commit_instr_i[0].op)) begin
                 we_fpr_o[0] = 1'b1;
+            end else if (is_rd_posr(commit_instr_i[0].op)) begin
+                we_posr_o[0] = 1'b1;
             end else begin
                 we_gpr_o[0] = 1'b1;
             end
@@ -221,12 +225,14 @@ module commit_stage import ariane_pkg::*; #(
                                 && !instr_0_is_amo
                                 && !single_step_i) begin
                 // only if the first instruction didn't throw an exception and this instruction won't throw an exception
-                // and the functional unit is of type ALU, LOAD, CTRL_FLOW, MULT, FPU or FPU_VEC
+                // and the functional unit is of type ALU, LOAD, CTRL_FLOW, MULT, FPU, FPU_VEC or PAU
                 if (!exception_o.valid && !commit_instr_i[1].ex.valid
-                                       && (commit_instr_i[1].fu inside {ALU, LOAD, CTRL_FLOW, MULT, FPU, FPU_VEC})) begin
+                                       && (commit_instr_i[1].fu inside {ALU, LOAD, CTRL_FLOW, MULT, FPU, FPU_VEC, PAU})) begin
 
                     if (is_rd_fpr(commit_instr_i[1].op))
                         we_fpr_o[1] = 1'b1;
+                    else if (is_rd_posr(commit_instr_i[1].op))
+                        we_posr_o[1] = 1'b1;
                     else
                         we_gpr_o[1] = 1'b1;
 

@@ -89,6 +89,13 @@ module ex_stage import ariane_pkg::*; #(
     output logic                                   x_we_o,
     output cvxif_pkg::cvxif_req_t                  cvxif_req_o,
     input  cvxif_pkg::cvxif_resp_t                 cvxif_resp_i,
+    // PAU
+    input logic                                    pau_valid_i,
+    output logic                                   pau_ready_o,
+    output logic                                   pau_valid_o,
+    output logic [TRANS_ID_BITS-1:0]               pau_trans_id_o,        // ID of scoreboard entry at which to write back
+    output riscv::xlen_t                           pau_result_o,
+    output exception_t                             pau_exception_o,
     // Memory Management
     input  logic                                   enable_translation_i,
     input  logic                                   en_ld_st_translation_i,
@@ -178,7 +185,7 @@ module ex_stage import ariane_pkg::*; #(
         .pc_i,
         .is_compressed_instr_i,
         // any functional unit is valid, check that there is no accidental mis-predict
-        .fu_valid_i ( alu_valid_i || lsu_valid_i || csr_valid_i || mult_valid_i || fpu_valid_i ) ,
+        .fu_valid_i ( alu_valid_i || lsu_valid_i || csr_valid_i || mult_valid_i || fpu_valid_i || pau_valid_i ) ,
         .branch_valid_i,
         .branch_comp_res_i ( alu_branch_res ),
         .branch_result_o   ( branch_result ),
@@ -272,6 +279,38 @@ module ex_stage import ariane_pkg::*; #(
             assign fpu_result_o    = '0;
             assign fpu_valid_o     = '0;
             assign fpu_exception_o = '0;
+        end
+    endgenerate
+
+    // ----------------
+    // PAU
+    // ----------------
+    generate
+        if (POS_PRESENT) begin : pau_gen
+            fu_data_t pau_data;
+            logic [POSLEN-1:0] pau_result;
+
+            assign pau_data = pau_valid_i ? fu_data_i : '0;
+
+            // No exceptions arising from the pau
+            assign pau_exception_o.valid = 1'b0;
+
+            pau_top pau_top_i (
+                .clk_i,
+                .rst_ni,
+                .fu_data_i        ( pau_data       ),
+                .pau_valid_i,
+                .pau_ready_o,
+                .pau_trans_id_o,
+                .pau_valid_o,
+                .result_o         ( pau_result_o   )
+            );
+        end else begin : no_pau_gen
+            assign pau_ready_o = '0;
+            assign pau_valid_o = '0;
+            assign pau_trans_id_o = '0;
+            assign pau_result_o = '0;
+            assign pau_exception_o = '0;
         end
     endgenerate
 

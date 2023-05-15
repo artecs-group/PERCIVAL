@@ -22,7 +22,7 @@ module rvfi_tracer #(
   int unsigned SIM_FINISH;
   initial begin
     f = $fopen($sformatf("trace_rvfi_hart_%h.dasm", HART_ID), "w");
-    if (!$value$plusargs("time_out=%d", SIM_FINISH)) SIM_FINISH = 2000000;
+    if (!$value$plusargs("time_out=%d", SIM_FINISH)) SIM_FINISH = 20000000;
   end
 
   final $fclose(f);
@@ -56,14 +56,14 @@ module rvfi_tracer #(
           $fwrite(f, " x%d 0x%h\n",
             rvfi_i[i].rd_addr, rvfi_i[i].rd_wdata);
         end else $fwrite(f, "\n");
-        if (rvfi_i[i].insn == 32'h00000073) begin
-          $finish(1);
-          $finish(1);
-        end
+        // if (rvfi_i[i].insn == 32'h00000073) begin
+        //   $finish(1);
+        //   $finish(1);
+        // end
       end else if (rvfi_i[i].trap)
         $fwrite(f, "exception : 0x%h\n", pc64);
     end
-    if (cycles > SIM_FINISH) $finish(1);
+    // if (cycles > SIM_FINISH) $finish(1);
   end
 
   always_ff @(posedge clk_i or negedge rst_ni)

@@ -81,7 +81,8 @@ endif
 
 # target takes one of the following cva6 hardware configuration:
 # cv64a6_imafdc_sv39, cv32a6_imac_sv0, cv32a6_imac_sv32, cv32a6_imafc_sv32
-target     ?= cv64a6_imafdc_sv39
+# PERCIVAL is defined in percival_imafdcxposit_sv39
+target     ?= percival_imafdcxposit_sv39
 
 # Sources
 # Package files -> compile first
@@ -155,9 +156,9 @@ ifdef spike-tandem
     CFLAGS += -Itb/riscv-isa-sim/install/include/spike
 endif
 
-
 # this list contains the standalone components
-src :=  $(filter-out core/ariane_regfile.sv, $(wildcard core/*.sv))                  \
+src :=  $(wildcard core/pau/*.vhd)                                                   \
+        $(filter-out core/ariane_regfile.sv, $(wildcard core/*.sv))                  \
         $(filter-out core/fpu/src/fpnew_pkg.sv, $(wildcard core/fpu/src/*.sv))       \
         $(filter-out core/fpu/src/fpu_div_sqrt_mvp/hdl/defs_div_sqrt_mvp.sv,         \
         $(wildcard core/fpu/src/fpu_div_sqrt_mvp/hdl/*.sv))                          \
@@ -341,7 +342,7 @@ vcs: vcs_build
 # Build the TB and module using QuestaSim
 build: $(library) $(library)/.build-srcs $(library)/.build-tb $(dpi-library)/ariane_dpi.so
 	# Optimize top level
-	$(VOPT) $(compile_flag) -work $(library)  $(top_level) -o $(top_level)_optimized +acc -check_synthesis
+	#$(VOPT) $(compile_flag) -work $(library)  $(top_level) -o $(top_level)_optimized +acc -check_synthesis
 
 # src files
 $(library)/.build-srcs: $(util) $(library)
@@ -350,7 +351,7 @@ $(library)/.build-srcs: $(util) $(library)
 	$(VLOG) $(compile_flag) -timescale "1ns / 1ns" -work $(library) $(filter %.sv,$(util)) $(list_incdir) -suppress 2583
 	# Suppress message that always_latch may not be checked thoroughly by QuestaSim.
 	$(VCOM) $(compile_flag_vhd) -work $(library) -pedanticerrors $(filter %.vhd,$(uart_src))
-	# $(VCOM) $(compile_flag_vhd) -work $(library) -pedanticerrors $(filter %.vhd,$(src))
+	$(VCOM) $(compile_flag_vhd) -work $(library) -pedanticerrors $(filter %.vhd,$(src))
 	$(VLOG) $(compile_flag) -timescale "1ns / 1ns" -work $(library) -pedanticerrors $(filter %.sv,$(src)) $(list_incdir) -suppress 2583
 	touch $(library)/.build-srcs
 
@@ -382,9 +383,12 @@ generate-trace-vsim:
 	make generate-trace
 
 sim: build
+	# $(VSIM) +permissive $(questa-flags) $(questa-cmd) -lib $(library) +MAX_CYCLES=$(max_cycles) +UVM_TESTNAME=$(test_case) \
+	# +BASEDIR=$(riscv-test-dir) $(uvm-flags) $(QUESTASIM_FLAGS) -gblso $(SPIKE_ROOT)/lib/libfesvr.so -sv_lib $(dpi-library)/ariane_dpi  \
+	# ${top_level}_optimized +permissive-off ++$(elf-bin) ++$(target-options) | tee sim.log
 	$(VSIM) +permissive $(questa-flags) $(questa-cmd) -lib $(library) +MAX_CYCLES=$(max_cycles) +UVM_TESTNAME=$(test_case) \
 	+BASEDIR=$(riscv-test-dir) $(uvm-flags) $(QUESTASIM_FLAGS) -gblso $(SPIKE_ROOT)/lib/libfesvr.so -sv_lib $(dpi-library)/ariane_dpi  \
-	${top_level}_optimized +permissive-off ++$(elf-bin) ++$(target-options) | tee sim.log
+	${top_level} +permissive-off ++$(elf-bin) ++$(target-options) | tee sim.log
 
 $(riscv-asm-tests): build
 	$(VSIM) +permissive $(questa-flags) $(questa-cmd) -lib $(library) +max-cycles=$(max_cycles) +UVM_TESTNAME=$(test_case) \
@@ -777,7 +781,8 @@ fpga: $(ariane_pkg) $(util) $(src) $(fpga_src) $(uart_src) $(copro_src)
 	@echo read_verilog -sv {$(ariane_pkg)} >> corev_apu/fpga/scripts/add_sources.tcl
 	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(util))}     >> corev_apu/fpga/scripts/add_sources.tcl
 	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(copro_src))} >> corev_apu/fpga/scripts/add_sources.tcl
-	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(src))} 	   >> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_vhdl        {$(filter-out $(fpga_filter), $(filter %.vhd, $(src)))}     >> corev_apu/fpga/scripts/add_sources.tcl
+	@echo read_verilog -sv {$(filter-out $(fpga_filter), $(filter %.sv, $(src)))} 	   >> corev_apu/fpga/scripts/add_sources.tcl
 	@echo read_verilog -sv {$(fpga_src)}   >> corev_apu/fpga/scripts/add_sources.tcl
 	@echo "[FPGA] Generate Bitstream"
 	cd corev_apu/fpga && make BOARD=$(BOARD) XILINX_PART=$(XILINX_PART) XILINX_BOARD=$(XILINX_BOARD) CLK_PERIOD_NS=$(CLK_PERIOD_NS)

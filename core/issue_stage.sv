@@ -54,6 +54,9 @@ module issue_stage import ariane_pkg::*; #(
     output logic [1:0]                               fpu_fmt_o,        // FP fmt field from instr.
     output logic [2:0]                               fpu_rm_o,         // FP rm field from instr.
 
+    input  logic                                     pau_ready_i,
+    output logic                                     pau_valid_o,
+
     output logic                                     csr_valid_o,
 
     // CVXIF
@@ -75,6 +78,7 @@ module issue_stage import ariane_pkg::*; #(
     input  logic [NR_COMMIT_PORTS-1:0][riscv::XLEN-1:0] wdata_i,
     input  logic [NR_COMMIT_PORTS-1:0]               we_gpr_i,
     input  logic [NR_COMMIT_PORTS-1:0]               we_fpr_i,
+    input  logic [NR_COMMIT_PORTS-1:0]               we_posr_i,
 
     output scoreboard_entry_t [NR_COMMIT_PORTS-1:0]  commit_instr_o,
     input  logic              [NR_COMMIT_PORTS-1:0]  commit_ack_i
@@ -84,6 +88,7 @@ module issue_stage import ariane_pkg::*; #(
     // ---------------------------------------------------
     fu_t  [2**REG_ADDR_SIZE-1:0] rd_clobber_gpr_sb_iro;
     fu_t  [2**REG_ADDR_SIZE-1:0] rd_clobber_fpr_sb_iro;
+    fu_t  [2**REG_ADDR_SIZE-1:0] rd_clobber_posr_sb_iro;
 
     logic [REG_ADDR_SIZE-1:0]  rs1_iro_sb;
     riscv::xlen_t              rs1_sb_iro;
@@ -133,6 +138,7 @@ module issue_stage import ariane_pkg::*; #(
         .unresolved_branch_i   ( 1'b0                                      ),
         .rd_clobber_gpr_o      ( rd_clobber_gpr_sb_iro                     ),
         .rd_clobber_fpr_o      ( rd_clobber_fpr_sb_iro                     ),
+        .rd_clobber_posr_o     ( rd_clobber_posr_sb_iro                    ),
         .rs1_i                 ( rs1_iro_sb                                ),
         .rs1_o                 ( rs1_sb_iro                                ),
         .rs1_valid_o           ( rs1_valid_sb_iro                          ),
@@ -180,6 +186,7 @@ module issue_stage import ariane_pkg::*; #(
         .rs3_valid_i         ( rs3_valid_iro_sb                ),
         .rd_clobber_gpr_i    ( rd_clobber_gpr_sb_iro           ),
         .rd_clobber_fpr_i    ( rd_clobber_fpr_sb_iro           ),
+        .rd_clobber_posr_i   ( rd_clobber_posr_sb_iro          ),
         .alu_valid_o         ( alu_valid_o                     ),
         .branch_valid_o      ( branch_valid_o                  ),
         .csr_valid_o         ( csr_valid_o                     ),
@@ -187,6 +194,7 @@ module issue_stage import ariane_pkg::*; #(
         .cvxif_ready_i       ( x_issue_ready_i                 ),
         .cvxif_off_instr_o   ( x_off_instr_o                   ),
         .mult_valid_o        ( mult_valid_o                    ),
+        .pau_valid_o         ( pau_valid_o                     ),
         .*
     );
 
