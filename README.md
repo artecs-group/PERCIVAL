@@ -49,7 +49,51 @@ The top-level module of the PAU can be found in `core/pau_top.sv`. The individua
 
 ![](docs/_static/pau_diagram.png)
 
-## FPGA synthesis
+## Getting Started
+
+The following instructions will get you a copy of the project up and running on your local machine and run the posit testsuite using the QuestaSim simulator. If you run into problems, look at the [troubleshooting](#troubleshooting-the-installation) section.
+
+### Prerequisites
+These instructions assume you have the [LLVM Xposit](https://github.com/artecs-group/llvm-xposit) compiler and the QuestaSim simulator installed in your system. Also, on a fresh Ubuntu 20.04 installation you will need to install the following packages:
+~~~
+sudo apt install -y git curl gcc g++ make autoconf
+~~~
+
+### Checkout the repository
+~~~
+git clone https://github.com/artecs-group/PERCIVAL.git
+cd PERCIVAL
+git submodule update --init --recursive
+~~~
+
+~~~
+mkdir tmp
+./ci/install-riscvpk.sh
+~~~
+
+### Compile the posit testsuite
+~~~
+clang --target=riscv64 -march=rv64gcxposit posit64_testsuite_llvm.c -c -o posit64_testsuite_llvm.o
+riscv64-unknown-elf-gcc posit64_testsuite_llvm.o -o posit64_testsuite_llvm.elf
+~~~
+
+### Simulate the posit testsuite
+~~~
+make sim elf-bin=$RISCV/riscv64-unknown-elf/bin/pk target-options=posit64_testsuite_llvm.elf batch-mode=1
+~~~
+Note: If you want to use the QuestaSim GUI, remove the `batch-mode=1` option.
+
+### Troubleshooting the installation
+
+If QuestaSim does not find the `libfesvr.so`, you can generate it by running the `./ci/install-fesvr.sh` script. If it still doesn't generate the library, add the line `fesvr_install_shared_lib = yes` to the `./tmp/riscv-isa-sim/fesvr/fesvr.mk.in` file and follow the `./ci/install-fesvr.sh` script instructions manually.
+
+If QuestaSim fails with the following error: `Fatal: Unexpected signal: 11`, run with:
+~~~
+make sim elf-bin=posit64_testsuite_llvm.elf QUESTASIM_FLAGS="-novopt -suppress 12110" batch-mode=1
+~~~
+This fix follows the instructions [here](https://github.com/openhwgroup/cva6/issues/800#issuecomment-1081757665). It should be fixed with newer versions of QuestaSim (2022.4 or later).
+
+## FPGA Synthesis
 
 To generate the FPGA bitstream for the Genesys II board run `make fpga`. This will produce a bitstream file and memory configuration file in `corev_apu/fpga/work-fpga/`.
 
