@@ -58,6 +58,7 @@ These instructions assume you have the [LLVM Xposit](https://github.com/artecs-g
 ~~~
 sudo apt install -y git curl gcc g++ make autoconf
 ~~~
+Make sure you have the $RISCV environment variable pointing to the directory where you installed the RISC-V gcc toolchain. E.g. `export RISCV="/opt/riscv`. Consider adding this permanently in your `.bashrc` file.
 
 ### Checkout the repository
 ~~~
