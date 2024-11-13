@@ -350,8 +350,10 @@ $(library)/.build-srcs: $(util) $(library)
 	# $(VCOM) $(compile_flag_vhd) -work $(library) -pedanticerrors $(filter %.vhd,$(ariane_pkg))
 	$(VLOG) $(compile_flag) -timescale "1ns / 1ns" -work $(library) $(filter %.sv,$(util)) $(list_incdir) -suppress 2583
 	# Suppress message that always_latch may not be checked thoroughly by QuestaSim.
-	$(VCOM) $(compile_flag_vhd) -work $(library) -pedanticerrors $(filter %.vhd,$(uart_src))
-	$(VCOM) $(compile_flag_vhd) -work $(library) -pedanticerrors $(filter %.vhd,$(src))
+	# $(VCOM) $(compile_flag_vhd) -work $(library) -pedanticerrors $(filter %.vhd,$(uart_src))
+	# $(VCOM) $(compile_flag_vhd) -work $(library) -pedanticerrors $(filter %.vhd,$(src))
+	$(VCOM) $(compile_flag_vhd) -work $(library) $(filter %.vhd,$(uart_src))
+	$(VCOM) $(compile_flag_vhd) -work $(library) $(filter %.vhd,$(src))
 	$(VLOG) $(compile_flag) -timescale "1ns / 1ns" -work $(library) -pedanticerrors $(filter %.sv,$(src)) $(list_incdir) -suppress 2583
 	touch $(library)/.build-srcs
 

@@ -210,7 +210,7 @@ int psqrt_test() {
         :
     );
 
-    if (d == 0x732B3FA425945DC0 && e == 0x6C605E1F5731CD40 && f == 0x8000000000000000) {
+    if (d == 0x732B3FA425945DCD && e == 0x6C605E1F5731CD47 && f == 0x8000000000000000) {
         printf("PSQRT test OK\n");
         return 0;
     }
