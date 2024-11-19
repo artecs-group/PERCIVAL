@@ -250,7 +250,7 @@ PERCIVAL is designed to be used with the [Genesys II](https://digilent.com/refer
 
 If QuestaSim does not find the `libfesvr.so`, you can generate it by running the `./ci/install-fesvr.sh` script.
 
-If it still doesn't generate the library, add the line `fesvr_install_shared_lib = yes` to the `./tmp/riscv-isa-sim/fesvr/fesvr.mk.in` file and follow the `./ci/install-fesvr.sh` script instructions manually in a console.
+If it still doesn't generate the library, add the line `fesvr_install_shared_lib = yes` to the `./tmp/riscv-isa-sim/fesvr/fesvr.mk.in` file and follow the `./ci/install-fesvr.sh` script instructions manually in a console. Add `make libfesvr.so` and `cp libfesvr.so $RISCV/lib`.
 
 ### QuestaSim returns the error: `Fatal: Unexpected signal: 11`
 
