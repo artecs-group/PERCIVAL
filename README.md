@@ -8,17 +8,13 @@ You can find the original CVA6 repo with additional documentation here: <https:/
 
 ## 64-bit version (Big-PERCIVAL)
 
-Here you can also find Big-PERCIVAL, an updated version of PERCIVAL which adds posit64 operations and increased flexibility in the PAU. You can read about it in our pre-print: <https://doi.org/10.48550/arXiv.2305.06946>
+Here you can also find Big-PERCIVAL, an updated version of PERCIVAL which adds posit64 operations and increased flexibility in the PAU. You can read about it in our [paper](https://ieeexplore.ieee.org/document/10473215).
 
 For the original PERCIVAL code switch to the `posit-master` branch. However, we recommend using the current default `big-percival-main` branch, as this also supports 32-bit posits.
 
 ## Publication
 
 If you use PERCIVAL in your academic work you can cite us:
-
-D. Mallasén, R. Murillo, A. A. D. Barrio, G. Botella, L. Piñuel, and M. Prieto-Matias, “PERCIVAL: Open-Source Posit RISC-V Core With Quire Capability,” IEEE Transactions on Emerging Topics in Computing, vol. 10, no. 3, pp. 1241–1252, 2022, doi: 10.1109/TETC.2022.3187199.
-
-D. Mallasén, A. A. Del Barrio, and M. Prieto-Matias, “Big-PERCIVAL: Exploring the Native Use of 64-Bit Posit Arithmetic in Scientific Computing.” arXiv [cs.AR], 2023. Available: <http://arxiv.org/abs/2305.06946>
 
 ~~~bibtex
 @article{mallasen2022PERCIVAL,
@@ -33,14 +29,16 @@ D. Mallasén, A. A. Del Barrio, and M. Prieto-Matias, “Big-PERCIVAL: Exploring
   doi = {10.1109/TETC.2022.3187199}
 }
 
-@misc{mallasen2023BigPERCIVAL,
+@article{mallasen2024BigPERCIVAL,
   title = {Big-PERCIVAL: Exploring the Native Use of 64-Bit Posit Arithmetic in Scientific Computing},
-  author = {Mallasén, David and Del Barrio, Alberto A. and Prieto-Matias, Manuel},
-  year = {2023},
-  month = may,
-  eprint = {2305.06946},
-  primaryclass = {cs.AR},
-  archiveprefix = {arXiv}
+  author = {Mallas{\'e}n, David and Del Barrio, Alberto A. and {Prieto-Matias}, Manuel},
+  year = {2024},
+  journal = {IEEE Transactions on Computers},
+  volume = {73},
+  number = {6},
+  pages = {1472--1485},
+  issn = {0018-9340, 1557-9956, 2326-3814},
+  doi = {10.1109/TC.2024.3377890}
 }
 ~~~
 
